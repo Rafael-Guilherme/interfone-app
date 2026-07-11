@@ -48,10 +48,19 @@
       "@livekit/react-native-expo-plugin",
       "@config-plugins/react-native-webrtc",
       [
+        "expo-image-picker",
+        { "photosPermission": "Usado para escolher a foto do interfone." }
+      ],
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Usado para definir o raio de atuação do interfone." }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "kotlinVersion": "1.9.25"
           }
         }
       ]
