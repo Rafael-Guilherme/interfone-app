@@ -13,19 +13,19 @@
  * a ponte pode repassar tudo sem deduplicar manualmente — a máquina de estados
  * é a única fonte de verdade.
  */
-import { useEffect } from 'react';
-import { useSession } from '../stores/session';
-import { useCall } from '../stores/call';
-import { createSignalingSocket, SignalingSocket } from '../api/signaling';
+import { useEffect } from "react";
+import { useSession } from "../../stores/session";
+import { useCall } from "../../stores/call";
+import { createSignalingSocket, SignalingSocket } from "../../api/signaling";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 /** Formato normalizado de um push de chamada (após parse do data-message). */
 export interface IncomingCallPush {
-  type: 'incoming_call' | 'call_cancelled';
+  type: "incoming_call" | "call_cancelled";
   callId: string;
   caller?: string;
-  media?: 'audio' | 'video';
+  media?: "audio" | "video";
   room?: string;
 }
 
@@ -39,7 +39,7 @@ export function useCallBridge() {
 
     const socket: SignalingSocket = createSignalingSocket(BASE_URL, access);
 
-    socket.on('call:incoming', (p) => {
+    socket.on("call:incoming", (p) => {
       receiveIncoming({
         callId: p.callId,
         callerName: p.caller,
@@ -50,12 +50,12 @@ export function useCallBridge() {
 
     // Qualquer terminação remota encerra a chamada local.
     const terminate = () => end();
-    socket.on('call:declined', terminate);
-    socket.on('call:ended', terminate);
-    socket.on('call:missed', terminate);
-    socket.on('call:cancelled', terminate);
+    socket.on("call:declined", terminate);
+    socket.on("call:ended", terminate);
+    socket.on("call:missed", terminate);
+    socket.on("call:cancelled", terminate);
     // 'call:answered' (atendida em outro device) também encerra este ring.
-    socket.on('call:answered', terminate);
+    socket.on("call:answered", terminate);
 
     return () => {
       socket.removeAllListeners();
@@ -71,14 +71,14 @@ export function useCallBridge() {
  */
 export function handleCallPush(push: IncomingCallPush) {
   const call = useCall.getState();
-  if (push.type === 'incoming_call' && push.caller && push.media && push.room) {
+  if (push.type === "incoming_call" && push.caller && push.media && push.room) {
     call.receiveIncoming({
       callId: push.callId,
       callerName: push.caller,
       media: push.media,
       room: push.room,
     });
-  } else if (push.type === 'call_cancelled') {
+  } else if (push.type === "call_cancelled") {
     call.end();
   }
 }

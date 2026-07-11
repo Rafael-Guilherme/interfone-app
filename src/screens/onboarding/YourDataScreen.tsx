@@ -4,7 +4,7 @@
  * recarrega /me e o RootNavigator troca sozinho para a tela "Aguardando
  * aprovação" (não há navegação manual para lá — é o gate que reage).
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -13,27 +13,30 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { colors, spacing, typography, radii } from '../../theme';
-import { Field, PrimaryButton, ScreenTitle } from '../../components/ui';
-import { useCondoBlocks, useJoinCondo } from '../../api/onboarding.hooks';
-import { useSession } from '../../stores/session';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { OnboardingStackParamList } from '../../navigation/types';
+} from "react-native";
+import { colors, spacing, typography, radii } from "../../theme";
+import { Field, PrimaryButton, ScreenTitle } from "../../components/ui";
+import { useSession } from "../../stores/session";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { OnboardingStackParamList } from "../../navigation/types";
+import {
+  useCondoBlocks,
+  useJoinCondo,
+} from "../../features/onboarding/onboarding.hooks";
 
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'BlockAndUnit'>;
+type Props = NativeStackScreenProps<OnboardingStackParamList, "BlockAndUnit">;
 
 export function YourDataScreen({ route }: Props) {
   const { condoId } = route.params;
-  const me = useSession((s) => s.me);
+  const me = useSession((s) => s.user);
 
   const { data: blocks, isLoading } = useCondoBlocks(condoId);
   const join = useJoinCondo();
 
   const [blockId, setBlockId] = useState<string | null>(null);
   const [unitId, setUnitId] = useState<string | null>(null);
-  const [name, setName] = useState(me?.name ?? '');
-  const [phone, setPhone] = useState('');
+  const [name, setName] = useState(me?.name ?? "");
+  const [phone, setPhone] = useState("");
 
   const units = useMemo(
     () => blocks?.find((b) => b.id === blockId)?.units ?? [],
@@ -46,10 +49,18 @@ export function YourDataScreen({ route }: Props) {
     if (!unitId) return;
     // join_code é resolvido no backend a partir do condo; aqui reusamos o fluxo:
     join.mutate(
-      { join_code: condoId, unit_id: unitId, name: name.trim(), phone: phone.trim() || undefined },
+      {
+        join_code: condoId,
+        unit_id: unitId,
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+      },
       {
         onError: () =>
-          Alert.alert('Erro', 'Não foi possível concluir o cadastro. Tente novamente.'),
+          Alert.alert(
+            "Erro",
+            "Não foi possível concluir o cadastro. Tente novamente.",
+          ),
         // sucesso: sem navegação — o RootNavigator vai para PendingApproval.
       },
     );
@@ -65,7 +76,10 @@ export function YourDataScreen({ route }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ScreenTitle title="Seus dados" subtitle="Confirme sua unidade e seus dados." />
+      <ScreenTitle
+        title="Seus dados"
+        subtitle="Confirme sua unidade e seus dados."
+      />
 
       <Text style={styles.label}>Bloco</Text>
       <View style={styles.chips}>
@@ -99,7 +113,12 @@ export function YourDataScreen({ route }: Props) {
       ) : null}
 
       <View style={{ height: spacing.lg }} />
-      <Field label="Nome completo" value={name} onChangeText={setName} placeholder="Seu nome" />
+      <Field
+        label="Nome completo"
+        value={name}
+        onChangeText={setName}
+        placeholder="Seu nome"
+      />
       <Field
         label="Telefone (opcional)"
         value={phone}
@@ -132,7 +151,9 @@ function Chip({
       onPress={onPress}
       style={[styles.chip, active && styles.chipActive]}
     >
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+      <Text style={[styles.chipText, active && styles.chipTextActive]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -140,14 +161,19 @@ function Chip({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.xl, paddingTop: spacing.xxl * 2 },
-  center: { alignItems: 'center', justifyContent: 'center' },
+  center: { alignItems: "center", justifyContent: "center" },
   label: {
     fontSize: typography.size.sm,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
     fontWeight: typography.weight.medium,
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  chips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   chip: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
@@ -157,6 +183,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { color: colors.text, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
+  chipText: {
+    color: colors.text,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+  },
   chipTextActive: { color: colors.textOnAccent },
 });

@@ -15,17 +15,33 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Usado para chamadas de vídeo do interfone.",
         "NSMicrophoneUsageDescription": "Usado para chamadas de áudio do interfone."
-      }
+      },
+      "bitcode": false
     },
     "android": {
       "package": "app.interfone.mobile",
-      "permissions": ["CAMERA", "RECORD_AUDIO", "INTERNET"]
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CAMERA",
+        "android.permission.INTERNET",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
     "extra": {
-      "//": "Em device/APK, defina EXPO_PUBLIC_API_URL com o IP/host da API (localhost não sai do aparelho)."
+      "//": "Em device/APK, defina EXPO_PUBLIC_API_URL com o IP/host da API (localhost não sai do aparelho).",
+      "eas": {
+        "projectId": "5b71c056-e525-48ad-a987-b954ae50d1ae"
+      }
     },
     "plugins": [
       "expo-asset",

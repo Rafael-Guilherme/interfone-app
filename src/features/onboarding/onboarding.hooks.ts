@@ -6,10 +6,7 @@
  * injetado via `api`, e o refetch de /me disparado quando o estado do servidor
  * muda (aqui, após join, para o RootNavigator recalcular a árvore).
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from './index';
-import { useSession } from '../stores/session';
-import type { Me } from '../types';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CondoBlock,
   JoinCondoBody,
@@ -19,13 +16,16 @@ import type {
   ResolveCondoResponse,
   VerifyOtpBody,
   VerifyOtpResponse,
-} from './onboarding.types';
+} from "./onboarding.types";
+import { useSession } from "../../stores/session";
+import { api } from "../../api";
+import { Me } from "../../types";
 
 /** Passo 2 — pede o código OTP por e-mail. */
 export function useRequestOtp() {
   return useMutation({
     mutationFn: (body: RequestOtpBody) =>
-      api.post<RequestOtpResponse>('/auth/otp/request', body),
+      api.post<RequestOtpResponse>("/auth/otp/request", body),
   });
 }
 
@@ -36,11 +36,11 @@ export function useVerifyOtp() {
 
   return useMutation({
     mutationFn: (body: VerifyOtpBody) =>
-      api.post<VerifyOtpResponse>('/auth/otp/verify', body),
+      api.post<VerifyOtpResponse>("/auth/otp/verify", body),
     onSuccess: async (tokens) => {
       setTokens(tokens);
       // com o token já ativo, busca o perfil (pode vir sem nenhum profile ainda)
-      const me = await api.get<Me>('/me');
+      const me = await api.get<Me>("/me");
       setMe(me);
     },
   });
@@ -49,7 +49,7 @@ export function useVerifyOtp() {
 /** Passo 4/5 — resolve o código do condomínio para o card de confirmação. */
 export function useResolveCondo(joinCode: string | null) {
   return useQuery({
-    queryKey: ['resolve-condo', joinCode],
+    queryKey: ["resolve-condo", joinCode],
     enabled: !!joinCode,
     queryFn: () =>
       api.get<ResolveCondoResponse>(
@@ -61,10 +61,9 @@ export function useResolveCondo(joinCode: string | null) {
 /** Passo 6 — blocos e unidades do condo, para os seletores. */
 export function useCondoBlocks(condoId: string | null) {
   return useQuery({
-    queryKey: ['condo-blocks', condoId],
+    queryKey: ["condo-blocks", condoId],
     enabled: !!condoId,
-    queryFn: () =>
-      api.get<CondoBlock[]>(`/condominiums/${condoId}/blocks`),
+    queryFn: () => api.get<CondoBlock[]>(`/condominiums/${condoId}/blocks`),
   });
 }
 
@@ -76,12 +75,12 @@ export function useJoinCondo() {
 
   return useMutation({
     mutationFn: (body: JoinCondoBody) =>
-      api.post<JoinCondoResponse>('/join', body),
+      api.post<JoinCondoResponse>("/join", body),
     onSuccess: async (res) => {
-      const me = await api.get<Me>('/me');
+      const me = await api.get<Me>("/me");
       setMe(me);
       setActiveProfile(res.profile_id); // já foca o perfil recém-criado (pending)
-      await qc.invalidateQueries({ queryKey: ['me'] });
+      await qc.invalidateQueries({ queryKey: ["me"] });
     },
   });
 }

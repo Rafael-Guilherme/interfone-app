@@ -11,6 +11,8 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { useCall } from '../../stores/call';
+import { useCallMedia } from './media/callMedia';
+import { VideoTile } from './media/VideoTile';
 
 interface Props {
   /** Injetado pelo container: encerra na API e faz teardown da sala. */
@@ -30,6 +32,14 @@ export function InCallScreen({ onEnd }: Props) {
 
   const isConnecting = phase === 'connecting';
 
+  // Mídia A/V real no nativo (LiveKit); no web é no-op (só sinalização).
+  const media = useCallMedia({
+    grant,
+    active: phase === 'inCall',
+    micOn: !muted,
+    cameraOn: videoEnabled,
+  });
+
   const handleEnd = async () => {
     endStore(); // -> 'ended' (UI reage)
     await onEnd?.(incoming?.callId ?? null);
@@ -38,10 +48,14 @@ export function InCallScreen({ onEnd }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Vídeo remoto (placeholder até o LiveKit VideoTrack) */}
+      {/* Vídeo remoto (LiveKit no nativo; placeholder enquanto conecta / no web) */}
       <View style={styles.remote}>
-        {grant && videoEnabled ? (
-          <Text style={styles.remoteHint}>[ vídeo remoto ]</Text>
+        {media.remoteVideoTrack ? (
+          <VideoTile track={media.remoteVideoTrack} style={StyleSheet.absoluteFillObject} />
+        ) : grant && videoEnabled ? (
+          <Text style={styles.remoteHint}>
+            {media.connected ? 'aguardando vídeo…' : 'conectando mídia…'}
+          </Text>
         ) : (
           <View style={styles.audioOnly}>
             <Text style={styles.caller}>{incoming?.callerName ?? 'Chamada'}</Text>
@@ -55,7 +69,11 @@ export function InCallScreen({ onEnd }: Props) {
       {/* Self-view PIP */}
       {videoEnabled ? (
         <View style={styles.pip}>
-          <Text style={styles.pipHint}>você</Text>
+          {media.localVideoTrack ? (
+            <VideoTile track={media.localVideoTrack} style={StyleSheet.absoluteFillObject} />
+          ) : (
+            <Text style={styles.pipHint}>você</Text>
+          )}
         </View>
       ) : null}
 

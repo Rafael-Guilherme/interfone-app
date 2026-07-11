@@ -21,6 +21,7 @@ export interface IncomingCall {
 }
 
 export interface MediaGrant {
+  provider?: string; // 'livekit' | 'demo'
   token: string;
   url: string;
 }

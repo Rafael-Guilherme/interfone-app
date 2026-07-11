@@ -2,7 +2,8 @@
  * Contratos do fluxo de onboarding (①), espelhando os endpoints de auth e
  * condominiums da API. No monorepo, movem-se para packages/shared-types.
  */
-import type { AuthTokens } from '../types';
+
+import { AuthTokens } from "../../types";
 
 // --- auth ---
 export interface RequestOtpBody {
@@ -48,5 +49,5 @@ export interface JoinCondoBody {
 /** Entrar cria o Profile em status pending. */
 export interface JoinCondoResponse {
   profile_id: string;
-  status: 'pending';
+  status: "pending";
 }

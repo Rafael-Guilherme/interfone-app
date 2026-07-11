@@ -56,8 +56,9 @@ export function useResidentCall() {
     socket.emit(
       'call:answer',
       { callId: incoming.callId },
-      (ack: { ok: boolean; grant?: { token: string; url: string } }) => {
-        if (ack?.ok && ack.grant) connected({ token: ack.grant.token, url: ack.grant.url });
+      (ack: { ok: boolean; grant?: { provider?: string; token: string; url: string } }) => {
+        if (ack?.ok && ack.grant)
+          connected({ provider: ack.grant.provider, token: ack.grant.token, url: ack.grant.url });
         else reset();
       },
     );

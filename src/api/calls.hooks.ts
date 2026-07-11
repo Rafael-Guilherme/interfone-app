@@ -9,9 +9,9 @@
  * store é o container da tela + a ponte de eventos, para manter uma única fonte
  * de verdade das transições.
  */
-import { useMutation } from '@tanstack/react-query';
-import { api } from './index';
-import type { CallMedia, CallMediaGrant } from '../types';
+import { useMutation } from "@tanstack/react-query";
+import { api } from ".";
+import type { CallMedia, CallMediaGrant } from "../types";
 
 export function useStartCall(condoId: string) {
   return useMutation({
@@ -34,8 +34,7 @@ export function useAnswerCall() {
 
 export function useDeclineCall() {
   return useMutation({
-    mutationFn: (callId: string) =>
-      api.post<void>(`/calls/${callId}/decline`),
+    mutationFn: (callId: string) => api.post<void>(`/calls/${callId}/decline`),
   });
 }
 
