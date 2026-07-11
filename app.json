@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Interfone",
+    "slug": "interfone",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#F7F8FB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.interfone.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Usado para chamadas de vídeo do interfone.",
+        "NSMicrophoneUsageDescription": "Usado para chamadas de áudio do interfone."
+      }
+    },
+    "android": {
+      "package": "app.interfone.mobile",
+      "permissions": ["CAMERA", "RECORD_AUDIO", "INTERNET"]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "//": "Em device/APK, defina EXPO_PUBLIC_API_URL com o IP/host da API (localhost não sai do aparelho)."
+    },
+    "plugins": [
+      "expo-asset",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
+  }
+}

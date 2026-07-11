@@ -1,0 +1,11 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true
+  },
+  "include": ["App.tsx", "src/**/*"],
+  "//": "src/screens/onboarding e src/api (skeleton) referenciam módulos ainda não construídos; o Metro só empacota o que a App.tsx importa, então não quebram o demo.",
+  "exclude": ["node_modules"]
+}
