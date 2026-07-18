@@ -1,0 +1,66 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { colors, spacing, typography, radii } from '../../theme';
+import { PrimaryButton, Field } from '../../components/ui';
+import { lookupByCode, joinAsManager } from './manager.api';
+
+/**
+ * Início do síndico: entrar num interfone existente pelo código (como síndico)
+ * ou criar um novo interfone.
+ */
+export function SindicoStartScreen() {
+  const nav = useNavigation<any>();
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const joinExisting = async () => {
+    setBusy(true);
+    try {
+      const found = await lookupByCode(code.trim().toUpperCase());
+      await joinAsManager(found.id);
+      Alert.alert('Solicitação enviada', `Você pediu acesso como síndico de "${found.name}". Aguarde a autorização.`, [
+        { text: 'OK', onPress: () => nav.navigate('InterfoneSelect') },
+      ]);
+    } catch (e: any) {
+      Alert.alert('Código', e.message ?? 'Condomínio não encontrado.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
+        <Pressable onPress={() => nav.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <Text style={styles.title}>Interfone do síndico</Text>
+        <Text style={styles.sub}>Já tem o código de um interfone existente? Entre como síndico. Senão, crie um novo.</Text>
+
+        <Field label="Código do condomínio" value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="Ex.: DEMO123" maxLength={8} />
+        <PrimaryButton label={busy ? 'Enviando…' : 'Entrar como síndico'} onPress={joinExisting} loading={busy} disabled={code.trim().length < 4} />
+
+        <View style={styles.divider}><View style={styles.line} /><Text style={styles.or}>ou</Text><View style={styles.line} /></View>
+
+        <Pressable style={styles.create} onPress={() => nav.navigate('ManagerRegister')}>
+          <Text style={styles.createTitle}>Criar um novo interfone</Text>
+          <Text style={styles.createDesc}>Cadastre seu condomínio do zero (foto, endereço, blocos, unidades, raio).</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bg },
+  pad: { padding: spacing.xl, paddingTop: spacing.xxl },
+  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.lg },
+  title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text },
+  sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.xl, lineHeight: 20 },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.xl },
+  line: { flex: 1, height: 1, backgroundColor: colors.border },
+  or: { color: colors.textMuted, fontSize: typography.size.sm },
+  create: { backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg },
+  createTitle: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
+  createDesc: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
+});

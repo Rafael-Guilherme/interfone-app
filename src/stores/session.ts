@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { AuthUser, Profile, Session } from '../api/client';
 import type { AuthTokens, Me } from '../types';
+import { useActive } from './active';
 
 /**
  * Sessão do morador — access token (JWT do login por OTP) + o /me (usuário e
@@ -34,12 +35,10 @@ export const useSession = create<SessionState>((set) => ({
   setTokens: (tokens) => set({ access: tokens.access }),
   setMe: (me) => set({ me, user: me.user, profiles: me.profiles }),
   setActiveProfile: (profileId) => set({ activeProfileId: profileId }),
-  signOut: () =>
-    set({
-      access: null,
-      me: null,
-      user: null,
-      profiles: [],
-      activeProfileId: null,
-    }),
+  signOut: () => {
+    // limpa também o interfone/cargo ativo, senão um próximo login pularia o seletor
+    useActive.getState().leave();
+    useActive.getState().setIntent(null);
+    set({ access: null, me: null, user: null, profiles: [], activeProfileId: null });
+  },
 }));

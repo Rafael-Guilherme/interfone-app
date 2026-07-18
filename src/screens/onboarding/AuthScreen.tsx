@@ -6,6 +6,7 @@ import { colors, spacing, typography } from '../../theme';
 import { PrimaryButton, Field, ScreenTitle } from '../../components/ui';
 import { requestOtp, verifyOtp, Session } from '../../api/client';
 import { useSession } from '../../stores/session';
+import { useActive } from '../../stores/active';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { BackLink } from './RoleSelectScreen';
 
@@ -21,6 +22,7 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'Auth'>;
 export function AuthScreen({ route, navigation }: Props) {
   const { intent } = route.params;
   const signIn = useSession((s) => s.signIn);
+  const setIntent = useActive((s) => s.setIntent);
 
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
@@ -62,25 +64,11 @@ export function AuthScreen({ route, navigation }: Props) {
   };
 
   const routeAfterAuth = (session: Session) => {
+    // Guarda a intenção (morador/síndico) para o seletor redirecionar um usuário
+    // novo direto ao fluxo certo. Ao setar o access, o RootNavigator troca para o
+    // seletor de interfones.
+    if (intent === 'resident' || intent === 'manager') setIntent(intent);
     signIn(session);
-    const active = session.profiles.find((p) => p.status === 'active');
-    if (active) return; // RootNavigator troca para o app sozinho
-
-    // Escolheu "Síndico" → sempre vai cadastrar um interfone (suporta multi-condo),
-    // mesmo que já tenha algum pendente.
-    if (intent === 'manager') {
-      navigation.replace('ManagerRegister');
-      return;
-    }
-
-    // "Entrar" / morador sem perfil ativo: se houver interfone pendente, mostra o
-    // status; senão, avisa que ainda não há acesso.
-    const pendingManager = session.profiles.find((p) => p.role === 'manager' && p.status === 'pending');
-    if (pendingManager) {
-      navigation.replace('RegisterSuccess', { condoName: pendingManager.condominium.name });
-    } else {
-      setError('Sua conta ainda não está vinculada a um interfone ativo.');
-    }
   };
 
   return (

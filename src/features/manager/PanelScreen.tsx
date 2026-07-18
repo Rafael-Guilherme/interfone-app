@@ -1,19 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
-import { useSession } from '../../stores/session';
-import type { ManagerStackParamList } from '../../navigation/types';
 import { CondoDetail, getCondo, useManagerCondo } from './manager.api';
 
-type Props = NativeStackScreenProps<ManagerStackParamList, 'Panel'>;
-
-/** Painel do condomínio (③·2) — estatísticas + atalhos de gestão. */
-export function PanelScreen({ navigation }: Props) {
+/** Início do síndico (③·2) — estatísticas + atalhos de gestão. */
+export function PanelScreen() {
   const condo = useManagerCondo();
-  const signOut = useSession((s) => s.signOut);
+  const nav = useNavigation<any>();
   const [detail, setDetail] = useState<CondoDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,22 +20,22 @@ export function PanelScreen({ navigation }: Props) {
       setLoading(false);
     }
   }, [condo?.condoId]);
-
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   if (!condo) return null;
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={styles.pad}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
-      >
-        <Text style={styles.hi}>Gestão</Text>
-        <Text style={styles.condo}>{detail?.name ?? condo.condoName}</Text>
-        {detail?.address?.city ? (
-          <Text style={styles.addr}>{[detail.address.street, detail.address.district, detail.address.city].filter(Boolean).join(', ')}</Text>
-        ) : null}
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.pad} refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}>
+        <View style={styles.head}>
+          <View>
+            <Text style={styles.hi}>Gestão</Text>
+            <Text style={styles.condo}>{detail?.name ?? condo.condoName}</Text>
+          </View>
+          <Pressable onPress={() => nav.navigate('InterfoneSelect')} hitSlop={8}>
+            <Text style={styles.switch}>▾ trocar</Text>
+          </Pressable>
+        </View>
 
         {loading && !detail ? (
           <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.accent} />
@@ -53,23 +48,12 @@ export function PanelScreen({ navigation }: Props) {
               <Stat label="Unidades" value={detail?.counts.units ?? 0} />
             </View>
 
-            <Action
-              title="Aprovar moradores"
-              desc={detail?.counts.residents_pending ? `${detail.counts.residents_pending} aguardando` : 'Nenhum pendente'}
-              badge={detail?.counts.residents_pending || undefined}
-              onPress={() => navigation.navigate('Residents')}
-            />
-            <Action
-              title="Compartilhar acesso"
-              desc="QR e link da portaria para entregadores/visitantes"
-              onPress={() => navigation.navigate('ShareAccess')}
-            />
+            <Action title="Aprovar moradores" desc={detail?.counts.residents_pending ? `${detail.counts.residents_pending} aguardando` : 'Nenhum pendente'} badge={detail?.counts.residents_pending || undefined} onPress={() => nav.navigate('Residents')} />
+            <Action title="Enviar comunicado" desc="Avise todos os moradores ou por bloco" onPress={() => nav.navigate('Announce')} />
+            <Action title="QR codes" desc="Criar, gerenciar e compartilhar os QR da portaria" onPress={() => nav.navigate('QRCodes')} />
+            <Action title="Compartilhar acesso" desc="QR e link da portaria para entregadores/visitantes" onPress={() => nav.navigate('ShareAccess')} />
           </>
         )}
-
-        <Pressable style={styles.signOut} onPress={signOut}>
-          <Text style={styles.signOutText}>Sair</Text>
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -83,7 +67,6 @@ function Stat({ label, value, highlight }: { label: string; value: number; highl
     </View>
   );
 }
-
 function Action({ title, desc, badge, onPress }: { title: string; desc: string; badge?: number; onPress: () => void }) {
   return (
     <Pressable style={({ pressed }) => [styles.action, pressed && styles.actionPressed]} onPress={onPress}>
@@ -91,11 +74,7 @@ function Action({ title, desc, badge, onPress }: { title: string; desc: string; 
         <Text style={styles.actionTitle}>{title}</Text>
         <Text style={styles.actionDesc}>{desc}</Text>
       </View>
-      {badge ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge}</Text>
-        </View>
-      ) : null}
+      {badge ? <View style={styles.badge}><Text style={styles.badgeText}>{badge}</Text></View> : null}
       <Text style={styles.chevron}>›</Text>
     </Pressable>
   );
@@ -104,9 +83,10 @@ function Action({ title, desc, badge, onPress }: { title: string; desc: string; 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl, flexGrow: 1 },
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   hi: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.medium },
   condo: { fontSize: typography.size.xxl, fontWeight: typography.weight.bold, color: colors.text, marginTop: 2 },
-  addr: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4 },
+  switch: { color: colors.textSecondary, fontSize: typography.size.sm, paddingTop: spacing.sm },
   stats: { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.xl },
   stat: { flex: 1, backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, paddingVertical: spacing.lg, alignItems: 'center' },
   statValue: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text },
@@ -118,6 +98,4 @@ const styles = StyleSheet.create({
   badge: { minWidth: 24, height: 24, borderRadius: 999, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   badgeText: { color: colors.textOnAccent, fontSize: typography.size.xs, fontWeight: typography.weight.bold },
   chevron: { fontSize: 26, color: colors.textMuted },
-  signOut: { marginTop: 'auto', alignItems: 'center', paddingTop: spacing.xxl },
-  signOutText: { color: colors.textSecondary, fontSize: typography.size.sm },
 });

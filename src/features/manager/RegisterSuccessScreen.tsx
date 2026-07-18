@@ -1,33 +1,33 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { useSession } from '../../stores/session';
 import { api } from '../../api';
 import type { Me } from '../../types';
-import type { OnboardingStackParamList } from '../../navigation/types';
-
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'RegisterSuccess'>;
 
 /**
  * Fim do cadastro do síndico: interfone criado, aguardando autorização do
  * administrador (o Profile do síndico fica `pending` até um super-admin aprovar).
  */
-export function RegisterSuccessScreen({ route, navigation }: Props) {
-  const { condoName, joinCode } = route.params;
-  const signOut = useSession((s) => s.signOut);
+export function RegisterSuccessScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { condoName, joinCode } = route.params ?? {};
   const setMe = useSession((s) => s.setMe);
   const [checking, setChecking] = useState(false);
 
-  // Rebusca o /me; se o admin já autorizou (perfil ativo), o RootNavigator troca
-  // para o painel do síndico sozinho. Senão, avisa que ainda está pendente.
+  // Rebusca o /me; quando o admin autorizar (perfil ativo), o interfone aparece
+  // disponível no seletor. Aqui só atualiza e avisa se ainda está pendente.
   const refresh = async () => {
     setChecking(true);
     try {
       const me = await api.get<Me>('/me');
       setMe(me);
-      if (!me.profiles.some((p) => p.status === 'active')) {
+      if (me.profiles.some((p) => p.status === 'active')) {
+        navigation.navigate('InterfoneSelect');
+      } else {
         Alert.alert('Ainda em análise', 'O interfone ainda aguarda autorização do administrador.');
       }
     } catch (e: any) {
@@ -37,13 +37,8 @@ export function RegisterSuccessScreen({ route, navigation }: Props) {
     }
   };
 
-  // Sair: limpa a sessão E reseta a pilha para o início (Welcome). Só o signOut
-  // não bastaria — o síndico continua "pendente" (não-ativo), então o
-  // RootNavigator permaneceria no onboarding, na mesma tela.
-  const onExit = () => {
-    signOut();
-    navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
-  };
+  // Volta ao seletor de interfones (usuário continua logado).
+  const onExit = () => navigation.navigate('InterfoneSelect');
 
   return (
     <SafeAreaView style={styles.screen}>

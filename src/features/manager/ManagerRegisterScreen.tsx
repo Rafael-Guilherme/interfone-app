@@ -3,14 +3,12 @@ import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Image, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field } from '../../components/ui';
 import { api } from '../../api';
+import { useSession } from '../../stores/session';
 import { lookupCep, formatCep } from './cep';
-import type { OnboardingStackParamList } from '../../navigation/types';
-
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'ManagerRegister'>;
 
 const RADII = [
   { m: 100, label: '100 m' },
@@ -36,7 +34,10 @@ function parseUnits(text: string): string[] {
     .filter((s) => s && !seen.has(s) && seen.add(s));
 }
 
-export function ManagerRegisterScreen({ navigation }: Props) {
+export function ManagerRegisterScreen() {
+  const navigation = useNavigation<any>();
+  // Usuário novo (sem nenhum perfil ainda) → finaliza a conta depois de criar.
+  const isNewUser = useSession((s) => s.profiles.length === 0);
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
 
@@ -139,11 +140,16 @@ export function ManagerRegisterScreen({ navigation }: Props) {
         payload.units = parseUnits(unitsText).map((n) => ({ number: n }));
       }
       const created = await api.post<CreatedCondo>('/condominiums', payload);
-      navigation.replace('RegisterSuccess', {
-        condoName: created.name,
-        joinCode: created.join_code,
-        qrToken: created.qr_token,
-      });
+      const params = { condoName: created.name, joinCode: created.join_code, qrToken: created.qr_token };
+      if (isNewUser) {
+        // Conta nova: finaliza cadastro (nome/telefone/termos) antes do sucesso.
+        navigation.replace('FinishAccount', params);
+      } else {
+        // Síndico já logado adicionando outro interfone: volta ao seletor.
+        Alert.alert('Interfone cadastrado', 'Aguardando autorização do administrador.', [
+          { text: 'OK', onPress: () => navigation.navigate('InterfoneSelect') },
+        ]);
+      }
     } catch (e: any) {
       Alert.alert('Erro', e.message ?? 'Não foi possível cadastrar o interfone.');
     } finally {

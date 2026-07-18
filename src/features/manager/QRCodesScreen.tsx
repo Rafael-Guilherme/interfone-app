@@ -1,0 +1,104 @@
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Switch, ActivityIndicator, Alert, Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { colors, spacing, typography, radii } from '../../theme';
+import { PromptModal } from './PromptModal';
+import { QrCodeRow, listQrs, createQr, updateQr, deleteQr, useManagerCondo } from './manager.api';
+import type { ManagerStackParamList } from '../../navigation/types';
+
+type Props = NativeStackScreenProps<ManagerStackParamList, 'QRCodes'>;
+
+const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173').replace(/\/$/, '');
+const linkFor = (token: string) => `${WEB_URL}/?t=${token}`;
+
+/** QR codes do síndico (③·7) — criar, ativar/desativar, compartilhar, remover. */
+export function QRCodesScreen({ navigation }: Props) {
+  const condo = useManagerCondo();
+  const id = condo?.condoId;
+  const [rows, setRows] = useState<QrCodeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    try { setRows(await listQrs(id)); } finally { setLoading(false); }
+  }, [id]);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const toggle = async (q: QrCodeRow) => { if (id) { await updateQr(id, q.id, { active: !q.active }); load(); } };
+  const share = (q: QrCodeRow) => Share.share({ message: `Chame a portaria do ${condo?.condoName} pelo Interfone: ${linkFor(q.token)}` });
+  const remove = (q: QrCodeRow) =>
+    Alert.alert('Remover QR code', `Remover "${q.label ?? q.token}"? Quem tiver este QR perde o acesso.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Remover', style: 'destructive', onPress: async () => { if (id) { await deleteQr(id, q.id); load(); } } },
+    ]);
+
+  if (!id) return null;
+
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.pad}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <Text style={styles.title}>QR codes</Text>
+        <Text style={styles.sub}>Crie e compartilhe QR/links da portaria. Entregadores e visitantes chamam por eles.</Text>
+
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.accent} />
+        ) : (
+          <>
+            {rows.map((q) => (
+              <View key={q.id} style={[styles.card, !q.active && styles.cardOff]}>
+                <View style={styles.qrGlyphBox}><Text style={styles.qrGlyph}>▦</Text></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>{q.label ?? 'QR code'}</Text>
+                  <Text style={styles.meta}>{q.unit ?? 'Condomínio todo'} · {q.used_count} usos</Text>
+                  <Text style={styles.link} numberOfLines={1}>{linkFor(q.token)}</Text>
+                  <View style={styles.actions}>
+                    <Pressable onPress={() => share(q)}><Text style={styles.actShare}>Compartilhar</Text></Pressable>
+                    <Pressable onPress={() => remove(q)}><Text style={styles.actDel}>Remover</Text></Pressable>
+                  </View>
+                </View>
+                <Switch value={q.active} onValueChange={() => toggle(q)} trackColor={{ true: colors.accent }} />
+              </View>
+            ))}
+
+            <Pressable style={styles.add} onPress={() => setAdding(true)}>
+              <Text style={styles.addText}>＋ Novo QR code</Text>
+            </Pressable>
+          </>
+        )}
+      </ScrollView>
+
+      <PromptModal
+        visible={adding}
+        title="Novo QR code"
+        placeholder="Nome (ex.: Portaria, Visitantes)"
+        confirmLabel="Criar"
+        onCancel={() => setAdding(false)}
+        onConfirm={async (v) => { setAdding(false); if (id) { await createQr(id, v); load(); } }}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bg },
+  pad: { padding: spacing.xl },
+  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.md },
+  title: { fontSize: typography.size.xxl, fontWeight: typography.weight.bold, color: colors.text },
+  sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.xl, lineHeight: 20 },
+  card: { flexDirection: 'row', backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md },
+  cardOff: { opacity: 0.55 },
+  qrGlyphBox: { width: 48, height: 48, borderRadius: radii.button, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+  qrGlyph: { fontSize: 28, color: colors.text },
+  label: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
+  meta: { fontSize: typography.size.xs, color: colors.textSecondary, marginTop: 2 },
+  link: { fontSize: typography.size.xs, color: colors.textMuted, marginTop: spacing.xs },
+  actions: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.sm },
+  actShare: { color: colors.accent, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  actDel: { color: colors.error, fontSize: typography.size.sm },
+  add: { alignItems: 'center', paddingVertical: spacing.lg, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', marginTop: spacing.sm },
+  addText: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },
+});
