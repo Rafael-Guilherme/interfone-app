@@ -16,8 +16,8 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'Auth'>;
  * Login/cadastro passwordless por OTP de e-mail. Após autenticar, decide o
  * destino pelo `intent`:
  *   - perfil ATIVO → o RootNavigator troca para o app automaticamente;
- *   - síndico sem condo → wizard de cadastro do interfone;
- *   - síndico já com condo pendente → tela de "aguardando autorização".
+ *   - gestor sem condo → wizard de cadastro do interfone;
+ *   - gestor já com condo pendente → tela de "aguardando autorização".
  */
 export function AuthScreen({ route, navigation }: Props) {
   const { intent } = route.params;
@@ -31,7 +31,7 @@ export function AuthScreen({ route, navigation }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const title = intent === 'manager' ? 'Acesse como síndico' : 'Entrar';
+  const title = intent === 'manager' ? 'Acesse como gestor' : 'Entrar';
 
   const onRequest = async () => {
     setBusy(true);
@@ -64,7 +64,7 @@ export function AuthScreen({ route, navigation }: Props) {
   };
 
   const routeAfterAuth = (session: Session) => {
-    // Guarda a intenção (morador/síndico) para o seletor redirecionar um usuário
+    // Guarda a intenção (morador/gestor) para o seletor redirecionar um usuário
     // novo direto ao fluxo certo. Ao setar o access, o RootNavigator troca para o
     // seletor de interfones.
     if (intent === 'resident' || intent === 'manager') setIntent(intent);

@@ -12,6 +12,8 @@ export interface Profile {
   id: string;
   role: string;
   status: string;
+  /** Permissões do sub-gestor. Vazio para `manager`, que tem acesso total. */
+  permissions?: string[];
   condominium: { id: string; name: string; slug: string };
   units: Unit[];
 }
@@ -19,6 +21,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  phone?: string | null;
+  avatar_url?: string | null;
 }
 export interface Session {
   access: string;

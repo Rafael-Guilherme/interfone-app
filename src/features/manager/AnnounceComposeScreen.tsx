@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
+import { PrimaryButton, Field, BackButton } from '../../components/ui';
 import { Announcement, BlockRow, createAnnouncement, getStructure, listAnnouncements, useManagerCondo } from './manager.api';
 import type { ManagerStackParamList } from '../../navigation/types';
 
@@ -46,11 +46,21 @@ export function AnnounceComposeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Enviar comunicado</Text>
 
         <Field label="Título" value={title} onChangeText={setTitle} placeholder="Ex.: Manutenção da caixa d'água" />
-        <Field label="Mensagem" value={body} onChangeText={setBody} placeholder="Escreva o comunicado…" multiline />
+        {/* Caixa alta de verdade: com `multiline` mas altura de 50px, o
+            comunicado inteiro era escrito por uma fresta de uma linha. */}
+        <Field
+          label="Mensagem"
+          value={body}
+          onChangeText={setBody}
+          placeholder="Escreva o comunicado…"
+          multiline
+          numberOfLines={8}
+          style={styles.textarea}
+        />
 
         <Text style={styles.label}>Destinatários</Text>
         <View style={styles.seg}>
@@ -90,9 +100,16 @@ export function AnnounceComposeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  textarea: {
+    height: 180,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    // Sem isto o texto fica centralizado verticalmente no Android.
+    textAlignVertical: 'top',
+    lineHeight: 22,
+  },
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.md },
   title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text, marginBottom: spacing.lg },
   label: { fontSize: typography.size.sm, color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: typography.weight.medium },
   seg: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },

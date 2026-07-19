@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
+import { PrimaryButton, Field, BackButton } from '../../components/ui';
 import { LookupResult, lookupByCode, join } from './manager.api';
+import { useSession } from '../../stores/session';
 
 /** Morador entra num interfone pelo código do condomínio + escolhe a unidade. */
 export function JoinUnitScreen() {
   const navigation = useNavigation<any>();
+  const isNewUser = useSession((s) => s.profiles.length === 0);
   const [code, setCode] = useState('');
   const [found, setFound] = useState<LookupResult | null>(null);
   const [unitId, setUnitId] = useState<string>('');
@@ -29,10 +31,25 @@ export function JoinUnitScreen() {
 
   const confirm = async () => {
     if (!found || !unitId) return;
+    const unitLabel = found.units.find((u) => u.id === unitId)?.label;
+
+    // Usuário novo: coleta foto/nome/telefone antes de entrar. Quem já tem
+    // perfil pula essa etapa e entra direto (já cadastrou seus dados).
+    if (isNewUser) {
+      navigation.navigate('CompleteProfile', {
+        kind: 'resident',
+        condoId: found.id,
+        condoName: found.name,
+        unitId,
+        unitLabel,
+      });
+      return;
+    }
+
     setBusy(true);
     try {
       await join(found.id, unitId);
-      Alert.alert('Solicitação enviada', 'Aguarde o síndico aprovar sua entrada na unidade.', [
+      Alert.alert('Solicitação enviada', 'Aguarde o gestor aprovar sua entrada na unidade.', [
         { text: 'OK', onPress: () => navigation.navigate('InterfoneSelect') },
       ]);
     } catch (e: any) {
@@ -45,11 +62,9 @@ export function JoinUnitScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.back}>‹ Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Entrar como morador</Text>
-        <Text style={styles.sub}>Digite o código do condomínio (o síndico compartilha).</Text>
+        <Text style={styles.sub}>Digite o código do condomínio (o gestor compartilha).</Text>
 
         <Field label="Código do condomínio" value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="Ex.: DEMO123" maxLength={8} />
         {!found ? (
@@ -76,7 +91,6 @@ export function JoinUnitScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl, paddingTop: spacing.xxl },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.lg },
   title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.xl },
   found: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text, marginVertical: spacing.md },

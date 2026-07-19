@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
-import { ScreenTitle } from '../../components/ui';
+import { ScreenTitle, BackButton } from '../../components/ui';
 import type { OnboardingStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'RoleSelect'>;
 
-/** "Você é?" — escolhe morador ou síndico, decidindo a jornada. */
+/** "Você é?" — escolhe morador ou gestor, decidindo a jornada. */
 export function RoleSelectScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
@@ -23,7 +23,7 @@ export function RoleSelectScreen({ navigation }: Props) {
       />
       <RoleCard
         emoji="🔑"
-        title="Síndico"
+        title="Gestor"
         desc="Quero cadastrar o interfone do meu condomínio e gerenciá-lo."
         onPress={() => navigation.navigate('Auth', { intent: 'manager' })}
       />
@@ -34,7 +34,9 @@ export function RoleSelectScreen({ navigation }: Props) {
 function RoleCard({ emoji, title, desc, onPress }: { emoji: string; title: string; desc: string; onPress: () => void }) {
   return (
     <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]} onPress={onPress}>
-      <Text style={styles.emoji}>{emoji}</Text>
+      <View style={styles.emojiWrap}>
+        <Text style={styles.emoji}>{emoji}</Text>
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.cardTitle}>{title}</Text>
         <Text style={styles.cardDesc}>{desc}</Text>
@@ -44,18 +46,13 @@ function RoleCard({ emoji, title, desc, onPress }: { emoji: string; title: strin
   );
 }
 
+/** Mantido como reexport para não quebrar quem já importa daqui. */
 export function BackLink({ onPress }: { onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={styles.back} hitSlop={12}>
-      <Text style={styles.backText}>‹ Voltar</Text>
-    </Pressable>
-  );
+  return <BackButton onPress={onPress} />;
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg, padding: spacing.xl },
-  back: { marginBottom: spacing.md },
-  backText: { color: colors.textSecondary, fontSize: typography.size.md },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -67,8 +64,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     gap: spacing.lg,
   },
-  cardPressed: { borderColor: colors.text },
-  emoji: { fontSize: 30 },
+  cardPressed: { borderColor: colors.accent, backgroundColor: colors.bg },
+  emojiWrap: { width: 52, height: 52, borderRadius: radii.card, backgroundColor: colors.errorBg, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: 26 },
   cardTitle: { fontSize: typography.size.lg, fontWeight: typography.weight.bold, color: colors.text },
   cardDesc: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 2, lineHeight: 18 },
   chevron: { fontSize: 28, color: colors.textMuted },

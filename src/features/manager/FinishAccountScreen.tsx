@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field, ScreenTitle } from '../../components/ui';
 import { api } from '../../api';
+import { mascaraTelefone } from '../../lib/mask';
 import { useSession } from '../../stores/session';
 import type { Me } from '../../types';
 
@@ -12,7 +13,7 @@ const TERMS_URL = process.env.EXPO_PUBLIC_TERMS_URL ?? 'https://interfone.app/te
 const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://interfone.app/privacidade';
 
 /**
- * Finaliza o cadastro do usuário (novo síndico) após criar o interfone:
+ * Finaliza o cadastro do usuário (novo gestor) após criar o interfone:
  * nome + telefone + aceite dos Termos de Uso e Política de Privacidade.
  */
 export function FinishAccountScreen() {
@@ -49,7 +50,7 @@ export function FinishAccountScreen() {
         <ScreenTitle title="Finalizar cadastro" subtitle="Só faltam seus dados para concluir." />
 
         <Field label="Nome completo" value={name} onChangeText={setName} placeholder="Seu nome" />
-        <Field label="Telefone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+55 11 90000-0000" />
+        <Field label="Telefone" value={phone} onChangeText={(t) => setPhone(mascaraTelefone(t))} keyboardType="phone-pad" placeholder="(11) 90000-0000" />
 
         <Pressable style={styles.terms} onPress={() => setAccepted((v) => !v)}>
           <View style={[styles.box, accepted && styles.boxOn]}>{accepted && <Text style={styles.check}>✓</Text>}</View>

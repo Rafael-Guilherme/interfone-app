@@ -41,6 +41,9 @@ export function ResidentHomeScreen() {
           <Shortcut emoji="✉️" label="Recados" onPress={() => nav.navigate('Recados')} />
           <Shortcut emoji="▦" label="Meus QR" onPress={() => nav.navigate('MeusQr')} />
           <Shortcut emoji="🕘" label="Histórico" onPress={() => nav.navigate('Historico')} />
+          <Shortcut emoji="📦" label="Encomendas" onPress={() => nav.navigate('Encomendas')} />
+          <Shortcut emoji="☎️" label="Fila de chamada" onPress={() => nav.navigate('FilaChamada')} />
+          <Shortcut emoji="📇" label="Contatos" onPress={() => nav.navigate('Contatos')} />
         </View>
       </ScrollView>
     </SafeAreaView>

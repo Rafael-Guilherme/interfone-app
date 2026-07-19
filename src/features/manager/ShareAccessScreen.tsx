@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Share
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton } from '../../components/ui';
+import { PrimaryButton, BackButton } from '../../components/ui';
 import { QrImage } from './QrImage';
 import type { ManagerStackParamList } from '../../navigation/types';
 import { CondoDetail, getCondo, useManagerCondo } from './manager.api';
@@ -30,17 +30,14 @@ export function ShareAccessScreen({ navigation }: Props) {
 
   const shareLink = async () => {
     if (!qrLink) return;
-    await Share.share({
-      message: `Chame a portaria do ${detail?.name} pelo Interfone: ${qrLink}`,
-    });
+    // Compartilha só a URL — sem texto em volta, para colar limpo em qualquer app.
+    await Share.share({ message: qrLink });
   };
 
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.back}>‹ Voltar</Text>
-        </Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Compartilhar acesso</Text>
         <Text style={styles.sub}>
           Entregadores e visitantes usam este link/QR para chamar a portaria pela web — sem instalar app.
@@ -78,7 +75,6 @@ export function ShareAccessScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.sm },
   title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 20 },
   body: { padding: spacing.xl },

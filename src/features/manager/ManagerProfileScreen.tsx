@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Image, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
+import { PrimaryButton, Field, LogoutButton } from '../../components/ui';
 import { api } from '../../api';
+import { mascaraTelefone } from '../../lib/mask';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
 import type { Me } from '../../types';
 
-/** Perfil do síndico (③·8-ish) — foto, nome, telefone. */
+/** Perfil do gestor (③·8-ish) — foto, nome, telefone. */
 export function ManagerProfileScreen() {
   const setMe = useSession((s) => s.setMe);
   const signOut = useSession((s) => s.signOut);
@@ -64,7 +65,7 @@ export function ManagerProfileScreen() {
 
         <Field label="Nome" value={name} onChangeText={setName} />
         <Field label="E-mail" value={email} editable={false} />
-        <Field label="Telefone (opcional)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+55 11 90000-0000" />
+        <Field label="Telefone (opcional)" value={phone} onChangeText={(t) => setPhone(mascaraTelefone(t))} keyboardType="phone-pad" placeholder="(11) 90000-0000" />
 
         <View style={{ height: spacing.md }} />
         <PrimaryButton label={busy ? 'Salvando…' : 'Salvar'} onPress={save} loading={busy} />
@@ -72,9 +73,7 @@ export function ManagerProfileScreen() {
         <Pressable style={styles.switch} onPress={() => leave()}>
           <Text style={styles.switchText}>Trocar interfone</Text>
         </Pressable>
-        <Pressable style={styles.signOut} onPress={signOut}>
-          <Text style={styles.signOutText}>Sair da conta</Text>
-        </Pressable>
+        <LogoutButton onPress={signOut} />
       </ScrollView>
     </SafeAreaView>
   );

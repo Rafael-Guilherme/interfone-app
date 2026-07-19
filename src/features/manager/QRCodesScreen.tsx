@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Switch, ActivityIndicator, Alert, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from '../../components/ui';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
@@ -14,7 +15,7 @@ type Props = NativeStackScreenProps<ManagerStackParamList, 'QRCodes'>;
 const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173').replace(/\/$/, '');
 const linkFor = (token: string) => `${WEB_URL}/?t=${token}`;
 
-/** QR codes do síndico (③·7) — criar, ativar/desativar, compartilhar, remover. */
+/** QR codes do gestor (③·7) — criar, ativar/desativar, compartilhar, remover. */
 export function QRCodesScreen({ navigation }: Props) {
   const condo = useManagerCondo();
   const id = condo?.condoId;
@@ -29,7 +30,7 @@ export function QRCodesScreen({ navigation }: Props) {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const toggle = async (q: QrCodeRow) => { if (id) { await updateQr(id, q.id, { active: !q.active }); load(); } };
-  const share = (q: QrCodeRow) => Share.share({ message: `Chame a portaria do ${condo?.condoName} pelo Interfone: ${linkFor(q.token)}` });
+  const share = (q: QrCodeRow) => Share.share({ message: linkFor(q.token) });
   const remove = (q: QrCodeRow) =>
     Alert.alert('Remover QR code', `Remover "${q.label ?? q.token}"? Quem tiver este QR perde o acesso.`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -41,7 +42,7 @@ export function QRCodesScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.pad}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>QR codes</Text>
         <Text style={styles.sub}>Crie e compartilhe QR/links da portaria. Entregadores e visitantes chamam por eles.</Text>
 
@@ -87,7 +88,6 @@ export function QRCodesScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.md },
   title: { fontSize: typography.size.xxl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.xl, lineHeight: 20 },
   card: { flexDirection: 'row', backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md },

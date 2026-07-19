@@ -5,8 +5,9 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
-import { lookupCep, formatCep } from './cep';
+import { PrimaryButton, Field, BackButton } from '../../components/ui';
+import { formatCep } from './cep';
+import { useCepAutocomplete } from './useCepAutocomplete';
 import { getCondo, updateCondo, useManagerCondo } from './manager.api';
 import type { ManagerStackParamList } from '../../navigation/types';
 
@@ -51,10 +52,9 @@ export function EditInterfoneScreen({ navigation }: Props) {
     const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.5, base64: true, allowsEditing: true, aspect: [16, 10] });
     if (!r.canceled && r.assets[0]?.base64) setPhoto(`data:image/jpeg;base64,${r.assets[0].base64}`);
   };
-  const onCepBlur = async () => {
-    if (cep.replace(/\D/g, '').length !== 8) return;
-    try { const a = await lookupCep(cep); setStreet(a.street); setDistrict(a.district); setCity(a.city); setUf(a.state); } catch {}
-  };
+  const { buscando: cepBusy } = useCepAutocomplete(cep, (a) => {
+    setStreet(a.street); setDistrict(a.district); setCity(a.city); setUf(a.state);
+  });
   const useLocation = async () => {
     const p = await Location.requestForegroundPermissionsAsync();
     if (!p.granted) return;
@@ -81,14 +81,14 @@ export function EditInterfoneScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.title}>Editar interfone</Text>
 
         <Pressable style={styles.photoBox} onPress={pickPhoto}>
           {photo ? <Image source={{ uri: photo }} style={styles.photo} /> : <Text style={styles.photoHint}>＋ Trocar foto</Text>}
         </Pressable>
         <Field label="Nome" value={name} onChangeText={setName} />
-        <Field label="CEP" value={cep} onChangeText={(v) => setCep(formatCep(v))} onBlur={onCepBlur} keyboardType="number-pad" maxLength={9} />
+        <Field label={cepBusy ? 'CEP (buscando…)' : 'CEP'} value={cep} onChangeText={(v) => setCep(formatCep(v))} keyboardType="number-pad" maxLength={9} />
         <Field label="Rua" value={street} onChangeText={setStreet} />
         <View style={styles.row}>
           <View style={{ flex: 1 }}><Field label="Número" value={number} onChangeText={setNumber} keyboardType="number-pad" /></View>
@@ -123,7 +123,6 @@ export function EditInterfoneScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.md },
   title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text, marginBottom: spacing.lg },
   row: { flexDirection: 'row' },
   photoBox: { height: 140, borderRadius: radii.card, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg, overflow: 'hidden' },

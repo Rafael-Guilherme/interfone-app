@@ -8,6 +8,7 @@ import { JoinUnitScreen } from '../features/manager/JoinUnitScreen';
 import { SindicoStartScreen } from '../features/manager/SindicoStartScreen';
 import { ManagerRegisterScreen } from '../features/manager/ManagerRegisterScreen';
 import { FinishAccountScreen } from '../features/manager/FinishAccountScreen';
+import { CompleteProfileScreen } from '../features/manager/CompleteProfileScreen';
 import { RegisterSuccessScreen } from '../features/manager/RegisterSuccessScreen';
 
 const Stack = createNativeStackNavigator();
@@ -26,6 +27,7 @@ export function SelectNavigator() {
         <Stack.Screen name="SindicoStart" component={SindicoStartScreen} />
         <Stack.Screen name="ManagerRegister" component={ManagerRegisterScreen} />
         <Stack.Screen name="FinishAccount" component={FinishAccountScreen} />
+        <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
         <Stack.Screen name="RegisterSuccess" component={RegisterSuccessScreen} options={{ gestureEnabled: false }} />
       </Stack.Navigator>
     </NavigationContainer>

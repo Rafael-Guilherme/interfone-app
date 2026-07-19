@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
+import { PrimaryButton, Field, BackButton } from '../../components/ui';
 import { QrImage } from '../manager/QrImage';
 import { MyQr, getMyQrs, createMyQr, deleteMyQr, useResidentCondo } from './resident.api';
 
@@ -53,7 +53,7 @@ export function MeusQrScreen() {
         <Text style={styles.label}>{q.label}</Text>
         <Text style={styles.meta}>{q.validity_mode === 'today' ? 'Válido hoje' : 'Sem expiração'} · {q.usage_mode === 'single' ? 'Uso único' : 'Ilimitado'} · {q.used_count} usos</Text>
         <View style={styles.actions}>
-          <Pressable onPress={() => Share.share({ message: `Acesso ao ${condo?.condoName}: ${linkFor(q.token)}` })}><Text style={styles.share}>Compartilhar</Text></Pressable>
+          <Pressable onPress={() => Share.share({ message: linkFor(q.token) })}><Text style={styles.share}>Compartilhar</Text></Pressable>
           <Pressable onPress={() => remove(q)}><Text style={styles.del}>Excluir</Text></Pressable>
         </View>
       </View>
@@ -63,7 +63,7 @@ export function MeusQrScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
-        <Pressable onPress={() => nav.goBack()} hitSlop={12}><Text style={styles.back}>‹ Voltar</Text></Pressable>
+        <BackButton onPress={() => nav.goBack()} />
         <Text style={styles.title}>Meus QR codes</Text>
         <Text style={styles.sub}>Gere um QR para uma visita ou entregador chamar sua unidade.</Text>
 
@@ -109,7 +109,6 @@ function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pad: { padding: spacing.xl },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.md },
   title: { fontSize: typography.size.xxl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.lg },
   form: { backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.xl },

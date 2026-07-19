@@ -1,10 +1,10 @@
 /**
- * Design tokens — derivados dos placeholders do wireframe (README).
- * O accent #FF0000 é placeholder: confirmar a cor de marca real antes do lançamento.
+ * Design tokens — derivados do wireframe (README).
+ * O accent #FF0000 foi confirmado pelo cliente como a cor de marca (2026-07-19).
  */
 
 export const colors = {
-  // Marca (PLACEHOLDER — confirmar)
+  // Marca
   accent: '#FF0000',
   accentPressed: '#D40000',
 

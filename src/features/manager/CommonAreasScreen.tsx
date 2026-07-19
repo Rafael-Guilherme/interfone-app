@@ -4,8 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { CommonArea, listAreas, updateArea, deleteArea, useManagerCondo } from './manager.api';
-
-const money = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
+import { formatarReais } from '../../lib/mask';
 
 /** Áreas comuns (③·6) — habilitar/desabilitar, ver agendamentos. */
 export function CommonAreasScreen() {
@@ -48,16 +47,26 @@ export function CommonAreasScreen() {
                   <Text style={styles.meta}>
                     {[
                       a.capacity != null ? `${a.capacity} pessoas` : null,
-                      a.fee_cents != null ? money(a.fee_cents) : null,
+                      a.fee_cents != null ? formatarReais(a.fee_cents) : null,
                       `${a.reservations} agendamento(s)`,
                     ].filter(Boolean).join(' · ')} ›
                   </Text>
                 </Pressable>
-                <Pressable hitSlop={8} onPress={() => nav.navigate('AreaForm', { area: { id: a.id, name: a.name, capacity: a.capacity, fee_cents: a.fee_cents } })}>
-                  <Text style={styles.edit}>✎</Text>
+                {/* Antes o editar era um "✎" cinza de 15px, quase invisível ao
+                    lado do Switch. Agora é um botão com borda e rótulo. */}
+                <Pressable
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Editar ${a.name}`}
+                  onPress={() => nav.navigate('AreaForm', { area: { id: a.id, name: a.name, capacity: a.capacity, fee_cents: a.fee_cents, max_days_ahead: a.max_days_ahead } })}
+                  style={({ pressed }) => [styles.editBtn, pressed && styles.editBtnOn]}
+                >
+                  <Text style={styles.editText}>✎ Editar</Text>
                 </Pressable>
                 <Switch value={a.enabled} onValueChange={() => toggle(a)} trackColor={{ true: colors.accent }} />
-                <Pressable hitSlop={8} onPress={() => remove(a)}><Text style={styles.del}>✕</Text></Pressable>
+                <Pressable hitSlop={8} accessibilityLabel={`Remover ${a.name}`} onPress={() => remove(a)}>
+                  <Text style={styles.del}>✕</Text>
+                </Pressable>
               </View>
             ))}
 
@@ -77,10 +86,19 @@ const styles = StyleSheet.create({
   title: { fontSize: typography.size.xxl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 4, marginBottom: spacing.xl },
   empty: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.lg },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md },
+  card: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md },
   name: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
   meta: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 2 },
-  edit: { fontSize: typography.size.md, color: colors.textSecondary },
+  editBtn: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+  },
+  editBtnOn: { borderColor: colors.accent, backgroundColor: colors.errorBg },
+  editText: { fontSize: typography.size.xs, color: colors.text, fontWeight: typography.weight.semibold },
   del: { fontSize: typography.size.md, color: colors.error },
   add: { alignItems: 'center', paddingVertical: spacing.lg, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', marginTop: spacing.sm },
   addText: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },

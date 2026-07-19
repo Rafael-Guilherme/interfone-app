@@ -6,12 +6,12 @@
 export type OnboardingStackParamList = {
   Welcome: undefined;
   RoleSelect: undefined;
-  /** OTP. intent decide o redirecionamento pós-login (morador vs síndico). */
+  /** OTP. intent decide o redirecionamento pós-login (morador vs gestor). */
   Auth: { intent: 'resident' | 'manager' | 'login' };
 };
 
 /**
- * Área do síndico aprovado (③). Um único ParamList compartilhado por todos os
+ * Área do gestor aprovado (③). Um único ParamList compartilhado por todos os
  * navegadores da área (pilha raiz + as pilhas de cada aba). Cada navegador
  * registra só um subconjunto; as telas navegam por nome (a navegação sobe a
  * árvore), mantendo a tab bar visível e a aba ativa destacada nas subtelas.
@@ -24,13 +24,16 @@ export type ManagerStackParamList = {
   ShareAccess: undefined;
   Announce: undefined;
   QRCodes: undefined;
+  Packages: undefined;
+  Managers: undefined;
+  Contacts: undefined;
   // aba Gestão
   Structure: undefined;
   EditInfo: undefined;
   // aba Comuns
   CommonAreas: undefined;
   AreaBookings: { areaId: string; areaName: string };
-  AreaForm: { area?: { id: string; name: string; capacity: number | null; fee_cents: number | null } } | undefined;
+  AreaForm: { area?: { id: string; name: string; capacity: number | null; fee_cents: number | null; max_days_ahead: number | null } } | undefined;
 };
 
 /** Tabs do rodapé (③): Início / Gestão / Comuns / Perfil. */

@@ -10,7 +10,7 @@ import { CallApp } from '../features/calls/CallApp';
  * Porta de entrada, em 4 vias:
  *   1. sem access                → onboarding (Welcome/RoleSelect/OTP);
  *   2. access, sem interfone ativo selecionado → seletor de interfones;
- *   3. interfone ativo = síndico → app do síndico;
+ *   3. interfone ativo = gestor → app do gestor;
  *   4. interfone ativo = morador → app de chamadas.
  *
  * Cada área traz sua própria navegação; o RootNavigator só escolhe qual montar.

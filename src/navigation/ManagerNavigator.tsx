@@ -13,6 +13,9 @@ import { ResidentsScreen } from '../features/manager/ResidentsScreen';
 import { ShareAccessScreen } from '../features/manager/ShareAccessScreen';
 import { AnnounceComposeScreen } from '../features/manager/AnnounceComposeScreen';
 import { QRCodesScreen } from '../features/manager/QRCodesScreen';
+import { PackagesScreen } from '../features/manager/PackagesScreen';
+import { ManagersScreen } from '../features/manager/ManagersScreen';
+import { ContactsManageScreen } from '../features/manager/ContactsManageScreen';
 import { EditInterfoneScreen } from '../features/manager/EditInterfoneScreen';
 import { AreaBookingsScreen } from '../features/manager/AreaBookingsScreen';
 import { AreaFormScreen } from '../features/manager/AreaFormScreen';
@@ -34,6 +37,7 @@ function InicioStack() {
       <Inicio.Screen name="Residents" component={ResidentsScreen} />
       <Inicio.Screen name="Announce" component={AnnounceComposeScreen} />
       <Inicio.Screen name="QRCodes" component={QRCodesScreen} />
+      <Inicio.Screen name="Packages" component={PackagesScreen} />
       <Inicio.Screen name="ShareAccess" component={ShareAccessScreen} />
     </Inicio.Navigator>
   );
@@ -43,6 +47,8 @@ function GestaoStack() {
     <Gestao.Navigator screenOptions={noHeader}>
       <Gestao.Screen name="Structure" component={StructureScreen} />
       <Gestao.Screen name="EditInfo" component={EditInterfoneScreen} />
+      <Gestao.Screen name="Managers" component={ManagersScreen} />
+      <Gestao.Screen name="Contacts" component={ContactsManageScreen} />
     </Gestao.Navigator>
   );
 }
@@ -77,7 +83,7 @@ function ManagerTabs() {
   );
 }
 
-/** Área do síndico do interfone ATIVO. As abas trazem tudo; adicionar/trocar
+/** Área do gestor do interfone ATIVO. As abas trazem tudo; adicionar/trocar
  * interfone acontece no seletor (SelectNavigator), acessível por "trocar"/"Sair". */
 export function ManagerApp() {
   return (

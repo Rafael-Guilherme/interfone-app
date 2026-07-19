@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PromptModal } from './PromptModal';
+import { useManagerAccess } from './permissoes';
 import {
   Structure, UnitRow, getStructure, useManagerCondo,
   createBlock, updateBlock, deleteBlock, createUnit, updateUnit, deleteUnit,
@@ -15,6 +16,7 @@ type Prompt = { title: string; initial?: string; placeholder?: string; run: (v: 
 export function StructureScreen() {
   const condo = useManagerCondo();
   const nav = useNavigation<any>();
+  const acesso = useManagerAccess();
   const [st, setSt] = useState<Structure | null>(null);
   const [loading, setLoading] = useState(true);
   const [prompt, setPrompt] = useState<Prompt | null>(null);
@@ -55,9 +57,29 @@ export function StructureScreen() {
       <ScrollView contentContainerStyle={styles.pad} refreshControl={undefined}>
         <Text style={styles.title}>Gestão do interfone</Text>
 
-        <Pressable style={styles.editInfo} onPress={() => nav.navigate('EditInfo')}>
-          <Text style={styles.editInfoText}>Editar informações (nome, foto, endereço, raio) ›</Text>
-        </Pressable>
+        {/* Dados do interfone: só o gestor TITULAR altera — a API já recusa
+            (assertOwner), então oferecer o botão a um sub-gestor só produziria
+            um 403. Mesma lógica para permissões, que ele usaria para se
+            auto-promover. */}
+        {acesso.titular && (
+          <>
+            <Pressable style={styles.editInfo} onPress={() => nav.navigate('EditInfo')}>
+              <Text style={styles.editInfoText}>Editar informações (nome, foto, endereço, raio) ›</Text>
+            </Pressable>
+
+            <Pressable style={styles.editInfo} onPress={() => nav.navigate('Managers')}>
+              <Text style={styles.editInfoText}>Sub-gestores e permissões ›</Text>
+            </Pressable>
+          </>
+        )}
+
+        {/* Contatos internos: exige a permissão "settings" (a API gateia por
+            ela), então o titular vê e o sub-gestor só com essa permissão. */}
+        {acesso.pode('settings') && (
+          <Pressable style={styles.editInfo} onPress={() => nav.navigate('Contacts')}>
+            <Text style={styles.editInfoText}>Contatos internos (portaria, zelador) ›</Text>
+          </Pressable>
+        )}
 
         {loading && !st ? (
           <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.accent} />

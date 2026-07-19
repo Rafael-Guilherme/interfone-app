@@ -5,10 +5,11 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
-import { PrimaryButton, Field } from '../../components/ui';
+import { PrimaryButton, Field, BackButton } from '../../components/ui';
 import { api } from '../../api';
 import { useSession } from '../../stores/session';
-import { lookupCep, formatCep } from './cep';
+import { formatCep } from './cep';
+import { useCepAutocomplete } from './useCepAutocomplete';
 
 const RADII = [
   { m: 100, label: '100 m' },
@@ -51,7 +52,6 @@ export function ManagerRegisterScreen() {
   const [district, setDistrict] = useState('');
   const [city, setCity] = useState('');
   const [uf, setUf] = useState('');
-  const [cepBusy, setCepBusy] = useState(false);
   const [hasBlocks, setHasBlocks] = useState<boolean | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string; unitsText: string }[]>([
     { id: 'b1', name: '', unitsText: '' },
@@ -75,21 +75,13 @@ export function ManagerRegisterScreen() {
     }
   };
 
-  const onCepBlur = async () => {
-    if (cep.replace(/\D/g, '').length !== 8) return;
-    setCepBusy(true);
-    try {
-      const a = await lookupCep(cep);
-      setStreet(a.street);
-      setDistrict(a.district);
-      setCity(a.city);
-      setUf(a.state);
-    } catch (e: any) {
-      Alert.alert('CEP', e.message ?? 'Não foi possível buscar o endereço.');
-    } finally {
-      setCepBusy(false);
-    }
-  };
+  // Dispara ao completar os 8 dígitos, não só no blur.
+  const { buscando: cepBusy, erro: cepErro } = useCepAutocomplete(cep, (a) => {
+    setStreet(a.street);
+    setDistrict(a.district);
+    setCity(a.city);
+    setUf(a.state);
+  });
 
   const useMyLocation = async () => {
     const perm = await Location.requestForegroundPermissionsAsync();
@@ -145,7 +137,7 @@ export function ManagerRegisterScreen() {
         // Conta nova: finaliza cadastro (nome/telefone/termos) antes do sucesso.
         navigation.replace('FinishAccount', params);
       } else {
-        // Síndico já logado adicionando outro interfone: volta ao seletor.
+        // Gestor já logado adicionando outro interfone: volta ao seletor.
         Alert.alert('Interfone cadastrado', 'Aguardando autorização do administrador.', [
           { text: 'OK', onPress: () => navigation.navigate('InterfoneSelect') },
         ]);
@@ -164,9 +156,7 @@ export function ManagerRegisterScreen() {
     <SafeAreaView style={styles.screen}>
       {/* header + stepper */}
       <View style={styles.header}>
-        <Pressable onPress={goBack} hitSlop={12}>
-          <Text style={styles.back}>‹ Voltar</Text>
-        </Pressable>
+        <BackButton onPress={goBack} />
         <Text style={styles.stepLabel}>{`Passo ${step + 1} de ${STEPS.length} · ${STEPS[step]}`}</Text>
       </View>
       <View style={styles.progress}>
@@ -197,11 +187,11 @@ export function ManagerRegisterScreen() {
               label={cepBusy ? 'CEP (buscando…)' : 'CEP'}
               value={cep}
               onChangeText={(v) => setCep(formatCep(v))}
-              onBlur={onCepBlur}
               keyboardType="number-pad"
               placeholder="00000-000"
               maxLength={9}
             />
+            {cepErro ? <Text style={styles.cepErro}>{cepErro}</Text> : null}
             <Field label="Rua" value={street} onChangeText={setStreet} placeholder="Logradouro" />
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
@@ -355,9 +345,9 @@ function Review({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  cepErro: { color: colors.error, fontSize: typography.size.xs, marginTop: -8, marginBottom: 8 },
   screen: { flex: 1, backgroundColor: colors.bg },
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-  back: { color: colors.textSecondary, fontSize: typography.size.md, marginBottom: spacing.sm },
   stepLabel: { color: colors.textMuted, fontSize: typography.size.xs, fontWeight: typography.weight.medium },
   progress: { flexDirection: 'row', gap: 4, paddingHorizontal: spacing.xl, marginTop: spacing.sm, marginBottom: spacing.md },
   progressBar: { flex: 1, height: 4, borderRadius: 999, backgroundColor: colors.border },

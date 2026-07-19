@@ -3,7 +3,7 @@ import { create } from 'zustand';
 /**
  * Interfone/cargo ATIVO escolhido no seletor (após o login). Um usuário pode ter
  * vários interfones com cargos diferentes; enquanto nenhum está selecionado, o
- * RootNavigator mostra o seletor. `signupIntent` guarda a escolha morador/síndico
+ * RootNavigator mostra o seletor. `signupIntent` guarda a escolha morador/gestor
  * feita antes do OTP, para redirecionar um usuário novo direto ao fluxo certo.
  */
 interface ActiveState {

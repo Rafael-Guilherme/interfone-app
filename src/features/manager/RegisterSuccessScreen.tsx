@@ -8,8 +8,8 @@ import { api } from '../../api';
 import type { Me } from '../../types';
 
 /**
- * Fim do cadastro do síndico: interfone criado, aguardando autorização do
- * administrador (o Profile do síndico fica `pending` até um super-admin aprovar).
+ * Fim do cadastro do gestor: interfone criado, aguardando autorização do
+ * administrador (o Profile do gestor fica `pending` até um super-admin aprovar).
  */
 export function RegisterSuccessScreen() {
   const navigation = useNavigation<any>();

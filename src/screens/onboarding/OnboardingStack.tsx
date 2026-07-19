@@ -31,7 +31,7 @@ function CondoCodeScreen({
     <View style={styles.screen}>
       <ScreenTitle
         title="Código do condomínio"
-        subtitle="Digite o código que o síndico compartilhou, ou escaneie o QR."
+        subtitle="Digite o código que o gestor compartilhou, ou escaneie o QR."
       />
       <Field
         label="Código"

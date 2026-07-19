@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
@@ -9,7 +9,7 @@ import { useActive } from '../../stores/active';
 import type { Me } from '../../types';
 
 const isManager = (role: string) => role === 'manager' || role === 'sub_manager';
-const roleLabel = (role: string) => (isManager(role) ? 'Síndico' : 'Morador');
+const roleLabel = (role: string) => (isManager(role) ? 'Gestor' : 'Morador');
 
 /** Meus interfones (③·1) — escolhe qual interfone/cargo usar, ou adiciona novo. */
 export function InterfoneSelectScreen() {
@@ -21,39 +21,80 @@ export function InterfoneSelectScreen() {
   const setIntent = useActive((s) => s.setIntent);
   const [profiles, setProfiles] = useState<Me['profiles']>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const buscar = useCallback(async () => {
+    const me = await api.get<Me>('/me');
+    setMe(me);
+    setProfiles(me.profiles);
+    // Usuário novo (sem perfis): manda direto ao fluxo escolhido antes do OTP.
+    if (me.profiles.length === 0 && signupIntent) {
+      const to = signupIntent === 'manager' ? 'SindicoStart' : 'JoinUnit';
+      setIntent(null);
+      nav.replace(to);
+    }
+    return me;
+  }, [signupIntent]);
 
   const load = useCallback(async () => {
-    try {
-      const me = await api.get<Me>('/me');
-      setMe(me);
-      setProfiles(me.profiles);
-      // Usuário novo (sem perfis): manda direto ao fluxo escolhido antes do OTP.
-      if (me.profiles.length === 0 && signupIntent) {
-        const to = signupIntent === 'manager' ? 'SindicoStart' : 'JoinUnit';
-        setIntent(null);
-        nav.replace(to);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [signupIntent]);
+    try { await buscar(); } finally { setLoading(false); }
+  }, [buscar]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { await buscar(); } finally { setRefreshing(false); }
+  }, [buscar]);
+
   const open = (p: Me['profiles'][number]) => {
-    if (p.status !== 'active') return;
-    enter({
-      kind: isManager(p.role) ? 'manager' : 'resident',
-      condoId: p.condominium.id,
-      condoName: p.condominium.name,
-      profileId: p.id,
-    });
+    if (p.status === 'active') {
+      enter({
+        kind: isManager(p.role) ? 'manager' : 'resident',
+        condoId: p.condominium.id,
+        condoName: p.condominium.name,
+        profileId: p.id,
+      });
+      return;
+    }
+    if (p.status === 'blocked') {
+      Alert.alert('Acesso recusado', 'O gestor recusou este acesso. Fale com a administração do condomínio.');
+      return;
+    }
+    // Pendente: rechecar na hora se já foi aprovado.
+    rechecarPendente(p.id);
+  };
+
+  /** Toca no card pendente → rebusca o /me e entra se já tiver sido aprovado. */
+  const rechecarPendente = async (profileId: string) => {
+    setRefreshing(true);
+    try {
+      const me = await buscar();
+      const atual = me.profiles.find((x) => x.id === profileId);
+      if (atual?.status === 'active') {
+        enter({
+          kind: isManager(atual.role) ? 'manager' : 'resident',
+          condoId: atual.condominium.id,
+          condoName: atual.condominium.name,
+          profileId: atual.id,
+        });
+      } else if (atual?.status === 'blocked') {
+        Alert.alert('Acesso recusado', 'O gestor recusou este acesso.');
+      } else {
+        Alert.alert('Ainda pendente', 'O gestor ainda não aprovou seu acesso. Tente novamente em instantes.');
+      }
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.pad}>
+      <ScrollView
+        contentContainerStyle={styles.pad}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+      >
         <Text style={styles.title}>Meus interfones</Text>
-        <Text style={styles.sub}>Escolha qual interfone usar ou adicione um novo.</Text>
+        <Text style={styles.sub}>Escolha qual interfone usar ou adicione um novo. Puxe para atualizar.</Text>
 
         {loading ? (
           <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.accent} />
@@ -74,7 +115,9 @@ export function InterfoneSelectScreen() {
                     <Text style={styles.name}>{p.condominium.name}</Text>
                     <Text style={styles.role}>{roleLabel(p.role)}{unit ? ` · ${unit}` : ''}</Text>
                     {pending ? (
-                      <Text style={styles.pendingText}>{p.status === 'blocked' ? 'Acesso recusado' : 'Aguardando aprovação'}</Text>
+                      <Text style={styles.pendingText}>
+                        {p.status === 'blocked' ? 'Acesso recusado' : 'Aguardando aprovação · toque para verificar'}
+                      </Text>
                     ) : (
                       <Text style={styles.activeText}>Entrar ›</Text>
                     )}
