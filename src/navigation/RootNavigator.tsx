@@ -1,30 +1,26 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { useSession } from '../stores/session';
+import { useActive } from '../stores/active';
 import { OnboardingNavigator } from './OnboardingNavigator';
+import { SelectNavigator } from './SelectNavigator';
 import { ManagerApp } from './ManagerNavigator';
 import { CallApp } from '../features/calls/CallApp';
 
 /**
- * Porta de entrada, decidida pelo perfil ATIVO do usuário:
- *   - gestor ativo  → app do síndico (painel de gestão);
- *   - morador ativo → app de chamadas;
- *   - sem perfil ativo (inclui síndico recém-cadastrado `pending`) → onboarding.
+ * Porta de entrada, em 4 vias:
+ *   1. sem access                → onboarding (Welcome/RoleSelect/OTP);
+ *   2. access, sem interfone ativo selecionado → seletor de interfones;
+ *   3. interfone ativo = síndico → app do síndico;
+ *   4. interfone ativo = morador → app de chamadas.
  *
- * CallApp/ManagerApp trazem sua própria navegação; por isso o NavigationContainer
- * do onboarding fica só no ramo não-autenticado.
+ * Cada área traz sua própria navegação; o RootNavigator só escolhe qual montar.
  */
 export function RootNavigator() {
   const access = useSession((s) => s.access);
-  const profiles = useSession((s) => s.profiles);
-  const active = access ? profiles.find((p) => p.status === 'active') : undefined;
+  const kind = useActive((s) => s.kind);
 
-  if (active && (active.role === 'manager' || active.role === 'sub_manager')) return <ManagerApp />;
-  if (active) return <CallApp />;
-
-  return (
-    <NavigationContainer>
-      <OnboardingNavigator />
-    </NavigationContainer>
-  );
+  if (!access) return <OnboardingNavigator />;
+  if (kind === 'manager') return <ManagerApp />;
+  if (kind === 'resident') return <CallApp />;
+  return <SelectNavigator />;
 }

@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Refre
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
+import { useActive } from '../../stores/active';
 import { CondoDetail, getCondo, useManagerCondo } from './manager.api';
 
 /** Início do síndico (③·2) — estatísticas + atalhos de gestão. */
 export function PanelScreen() {
   const condo = useManagerCondo();
   const nav = useNavigation<any>();
+  const leave = useActive((s) => s.leave);
   const [detail, setDetail] = useState<CondoDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export function PanelScreen() {
             <Text style={styles.hi}>Gestão</Text>
             <Text style={styles.condo}>{detail?.name ?? condo.condoName}</Text>
           </View>
-          <Pressable onPress={() => nav.navigate('InterfoneSelect')} hitSlop={8}>
+          <Pressable onPress={() => leave()} hitSlop={8}>
             <Text style={styles.switch}>▾ trocar</Text>
           </Pressable>
         </View>

@@ -2,14 +2,12 @@
  * Tipos de navegação do onboarding (①). Cada rota mapeia para os params que
  * as telas recebem via `route.params`.
  */
+/** Pré-login: só escolha de intenção + OTP. */
 export type OnboardingStackParamList = {
   Welcome: undefined;
   RoleSelect: undefined;
-  /** OTP. intent decide o destino após autenticar (morador vs síndico). */
+  /** OTP. intent decide o redirecionamento pós-login (morador vs síndico). */
   Auth: { intent: 'resident' | 'manager' | 'login' };
-  /** Wizard de cadastro do interfone (síndico). */
-  ManagerRegister: undefined;
-  RegisterSuccess: { condoName: string; joinCode?: string; qrToken?: string };
 };
 
 /**
@@ -19,12 +17,7 @@ export type OnboardingStackParamList = {
  * árvore), mantendo a tab bar visível e a aba ativa destacada nas subtelas.
  */
 export type ManagerStackParamList = {
-  // raiz
-  InterfoneSelect: undefined;
   Tabs: undefined;
-  AddRole: undefined;
-  ManagerRegister: { fromManager?: boolean } | undefined;
-  JoinUnit: undefined;
   // aba Início
   Panel: undefined;
   Residents: undefined;

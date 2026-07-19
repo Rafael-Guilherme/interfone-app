@@ -6,12 +6,14 @@ import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field } from '../../components/ui';
 import { api } from '../../api';
 import { useSession } from '../../stores/session';
+import { useActive } from '../../stores/active';
 import type { Me } from '../../types';
 
 /** Perfil do síndico (③·8-ish) — foto, nome, telefone. */
 export function ManagerProfileScreen() {
   const setMe = useSession((s) => s.setMe);
   const signOut = useSession((s) => s.signOut);
+  const leave = useActive((s) => s.leave);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -67,6 +69,9 @@ export function ManagerProfileScreen() {
         <View style={{ height: spacing.md }} />
         <PrimaryButton label={busy ? 'Salvando…' : 'Salvar'} onPress={save} loading={busy} />
 
+        <Pressable style={styles.switch} onPress={() => leave()}>
+          <Text style={styles.switchText}>Trocar interfone</Text>
+        </Pressable>
         <Pressable style={styles.signOut} onPress={signOut}>
           <Text style={styles.signOutText}>Sair da conta</Text>
         </Pressable>
@@ -84,6 +89,8 @@ const styles = StyleSheet.create({
   avatarEmpty: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   avatarLetter: { fontSize: 40, fontWeight: typography.weight.bold, color: colors.text },
   changePhoto: { color: colors.accent, fontSize: typography.size.sm, marginTop: spacing.sm, fontWeight: typography.weight.medium },
-  signOut: { alignItems: 'center', paddingVertical: spacing.xl, marginTop: spacing.md },
+  switch: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
+  switchText: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },
+  signOut: { alignItems: 'center', paddingVertical: spacing.md },
   signOutText: { color: colors.error, fontSize: typography.size.md },
 });

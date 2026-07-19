@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field } from '../../components/ui';
-import type { ManagerStackParamList } from '../../navigation/types';
 import { LookupResult, lookupByCode, join } from './manager.api';
 
-type Props = NativeStackScreenProps<ManagerStackParamList, 'JoinUnit'>;
-
 /** Morador entra num interfone pelo código do condomínio + escolhe a unidade. */
-export function JoinUnitScreen({ navigation }: Props) {
+export function JoinUnitScreen() {
+  const navigation = useNavigation<any>();
   const [code, setCode] = useState('');
   const [found, setFound] = useState<LookupResult | null>(null);
   const [unitId, setUnitId] = useState<string>('');

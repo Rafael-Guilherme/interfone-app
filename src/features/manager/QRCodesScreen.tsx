@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PromptModal } from './PromptModal';
+import { QrImage } from './QrImage';
 import { QrCodeRow, listQrs, createQr, updateQr, deleteQr, useManagerCondo } from './manager.api';
 import type { ManagerStackParamList } from '../../navigation/types';
 
@@ -50,7 +51,7 @@ export function QRCodesScreen({ navigation }: Props) {
           <>
             {rows.map((q) => (
               <View key={q.id} style={[styles.card, !q.active && styles.cardOff]}>
-                <View style={styles.qrGlyphBox}><Text style={styles.qrGlyph}>▦</Text></View>
+                <QrImage value={linkFor(q.token)} size={56} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.label}>{q.label ?? 'QR code'}</Text>
                   <Text style={styles.meta}>{q.unit ?? 'Condomínio todo'} · {q.used_count} usos</Text>

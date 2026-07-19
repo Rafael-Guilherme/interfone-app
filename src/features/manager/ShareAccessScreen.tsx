@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton } from '../../components/ui';
+import { QrImage } from './QrImage';
 import type { ManagerStackParamList } from '../../navigation/types';
 import { CondoDetail, getCondo, useManagerCondo } from './manager.api';
 
@@ -51,9 +52,8 @@ export function ShareAccessScreen({ navigation }: Props) {
           <ActivityIndicator style={{ marginTop: spacing.xxl }} color={colors.accent} />
         ) : (
           <>
-            {/* Placeholder do QR (imagem do QR entra com react-native-qrcode-svg). */}
             <View style={styles.qrBox}>
-              <Text style={styles.qrGlyph}>▦</Text>
+              {qrLink ? <QrImage value={qrLink} size={180} /> : null}
               <Text style={styles.qrHint}>QR da portaria</Text>
             </View>
 
@@ -82,8 +82,7 @@ const styles = StyleSheet.create({
   title: { fontSize: typography.size.xl, fontWeight: typography.weight.bold, color: colors.text },
   sub: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: spacing.xs, lineHeight: 20 },
   body: { padding: spacing.xl },
-  qrBox: { alignSelf: 'center', width: 200, height: 200, borderRadius: radii.card, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xl },
-  qrGlyph: { fontSize: 96, color: colors.text },
+  qrBox: { alignSelf: 'center', alignItems: 'center', padding: spacing.lg, borderRadius: radii.card, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xl },
   qrHint: { fontSize: typography.size.xs, color: colors.textSecondary, marginTop: spacing.sm },
   fieldLabel: { fontSize: typography.size.sm, color: colors.textSecondary, marginBottom: spacing.xs, fontWeight: typography.weight.medium },
   linkRow: { backgroundColor: colors.card, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border, padding: spacing.md, marginBottom: spacing.md },

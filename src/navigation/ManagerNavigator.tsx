@@ -5,7 +5,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { colors, typography } from '../theme';
 import type { ManagerStackParamList, ManagerTabParamList } from './types';
-import { InterfoneSelectScreen } from '../features/manager/InterfoneSelectScreen';
 import { PanelScreen } from '../features/manager/PanelScreen';
 import { StructureScreen } from '../features/manager/StructureScreen';
 import { CommonAreasScreen } from '../features/manager/CommonAreasScreen';
@@ -17,9 +16,6 @@ import { QRCodesScreen } from '../features/manager/QRCodesScreen';
 import { EditInterfoneScreen } from '../features/manager/EditInterfoneScreen';
 import { AreaBookingsScreen } from '../features/manager/AreaBookingsScreen';
 import { AreaFormScreen } from '../features/manager/AreaFormScreen';
-import { AddRoleScreen } from '../features/manager/AddRoleScreen';
-import { ManagerRegisterScreen } from '../features/manager/ManagerRegisterScreen';
-import { JoinUnitScreen } from '../features/manager/JoinUnitScreen';
 
 const RootStack = createNativeStackNavigator<ManagerStackParamList>();
 const Tab = createBottomTabNavigator<ManagerTabParamList>();
@@ -81,17 +77,13 @@ function ManagerTabs() {
   );
 }
 
-/** Área do síndico aprovado. NavigationContainer próprio (irmão do onboarding). */
+/** Área do síndico do interfone ATIVO. As abas trazem tudo; adicionar/trocar
+ * interfone acontece no seletor (SelectNavigator), acessível por "trocar"/"Sair". */
 export function ManagerApp() {
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={noHeader}>
-        <RootStack.Screen name="InterfoneSelect" component={InterfoneSelectScreen} />
         <RootStack.Screen name="Tabs" component={ManagerTabs} />
-        {/* adicionar novo interfone — fora das tabs (fluxo cheio) */}
-        <RootStack.Screen name="AddRole" component={AddRoleScreen} />
-        <RootStack.Screen name="ManagerRegister" component={ManagerRegisterScreen} />
-        <RootStack.Screen name="JoinUnit" component={JoinUnitScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );
