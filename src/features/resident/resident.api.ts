@@ -4,7 +4,7 @@ import { useActive } from '../../stores/active';
 export interface Area { id: string; name: string; capacity: number | null; fee_cents: number | null; max_days_ahead: number | null }
 
 /** Status de cada dia no calendário da área (ver api/src/common-areas/calendar.ts). */
-export type DayStatus = 'livre' | 'bloqueado' | 'ocupado' | 'meu' | 'administracao' | 'fora_janela';
+export type DayStatus = 'livre' | 'bloqueado' | 'ocupado' | 'meu' | 'pendente' | 'administracao' | 'fora_janela';
 export interface DiaCalendario { day: string; status: DayStatus; reason?: string | null }
 export interface AreaCalendar { area: { id: string; name: string; max_days_ahead: number | null }; days: DiaCalendario[] }
 export interface MyReservation { id: string; area: string; starts_at: string; ends_at: string; status: string }

@@ -43,9 +43,11 @@ export function ReservaCalendarioScreen() {
     setBusy(true);
     try {
       await createReservation(id, areaId, dia);
-      Alert.alert('Reservado', `${areaNome} · ${diaBR(dia)} (dia todo).`, [
-        { text: 'OK', onPress: () => nav.goBack() },
-      ]);
+      Alert.alert(
+        'Reserva solicitada com sucesso',
+        `${areaNome} · ${diaBR(dia)} (dia todo).\n\nSua reserva foi enviada e aguarda a aprovação do gestor. Você acompanha em "Minhas reservas".`,
+        [{ text: 'OK', onPress: () => nav.goBack() }],
+      );
     } catch (e: any) {
       Alert.alert('Não foi possível reservar', e.message ?? 'Erro.');
       setDia(null);

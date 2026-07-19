@@ -39,16 +39,23 @@ export function StructureScreen() {
 
   if (!id) return null;
 
+  // Só o gestor titular altera a estrutura (a API recusa o resto com assertOwner).
+  const podeEditar = acesso.titular;
+
   const renderUnit = (u: UnitRow) => (
     <View key={u.id} style={styles.unit}>
       <Text style={styles.unitNum}>{u.number}</Text>
       {u.residents > 0 && <Text style={styles.unitRes}>{u.residents}👤</Text>}
-      <Pressable hitSlop={8} onPress={() => setPrompt({ title: 'Renomear unidade', initial: u.number, run: (v) => updateUnit(id, u.id, v) })}>
-        <Text style={styles.edit}>✎</Text>
-      </Pressable>
-      <Pressable hitSlop={8} onPress={() => confirmDelete(`unidade ${u.number}`, () => deleteUnit(id, u.id))}>
-        <Text style={styles.del}>✕</Text>
-      </Pressable>
+      {podeEditar && (
+        <>
+          <Pressable hitSlop={8} onPress={() => setPrompt({ title: 'Renomear unidade', initial: u.number, run: (v) => updateUnit(id, u.id, v) })}>
+            <Text style={styles.edit}>✎</Text>
+          </Pressable>
+          <Pressable hitSlop={8} onPress={() => confirmDelete(`unidade ${u.number}`, () => deleteUnit(id, u.id))}>
+            <Text style={styles.del}>✕</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 
@@ -89,15 +96,19 @@ export function StructureScreen() {
               <View key={b.id} style={styles.block}>
                 <View style={styles.blockHead}>
                   <Text style={styles.blockName}>Bloco {b.name}</Text>
-                  <View style={styles.blockActions}>
-                    <Pressable hitSlop={8} onPress={() => setPrompt({ title: 'Renomear bloco', initial: b.name, run: (v) => updateBlock(id, b.id, v) })}><Text style={styles.edit}>✎</Text></Pressable>
-                    <Pressable hitSlop={8} onPress={() => confirmDelete(`bloco ${b.name}`, () => deleteBlock(id, b.id))}><Text style={styles.del}>✕</Text></Pressable>
-                  </View>
+                  {podeEditar && (
+                    <View style={styles.blockActions}>
+                      <Pressable hitSlop={8} onPress={() => setPrompt({ title: 'Renomear bloco', initial: b.name, run: (v) => updateBlock(id, b.id, v) })}><Text style={styles.edit}>✎</Text></Pressable>
+                      <Pressable hitSlop={8} onPress={() => confirmDelete(`bloco ${b.name}`, () => deleteBlock(id, b.id))}><Text style={styles.del}>✕</Text></Pressable>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.units}>{b.units.map(renderUnit)}</View>
-                <Pressable onPress={() => setPrompt({ title: `Nova unidade no bloco ${b.name}`, placeholder: 'Ex.: 101', run: (v) => createUnit(id, v, b.id) })}>
-                  <Text style={styles.addUnit}>＋ unidade</Text>
-                </Pressable>
+                {podeEditar && (
+                  <Pressable onPress={() => setPrompt({ title: `Nova unidade no bloco ${b.name}`, placeholder: 'Ex.: 101', run: (v) => createUnit(id, v, b.id) })}>
+                    <Text style={styles.addUnit}>＋ unidade</Text>
+                  </Pressable>
+                )}
               </View>
             ))}
 
@@ -108,15 +119,21 @@ export function StructureScreen() {
               </View>
             )}
 
-            {st && !st.has_blocks && (
+            {podeEditar && st && !st.has_blocks && (
               <Pressable onPress={() => setPrompt({ title: 'Nova unidade', placeholder: 'Ex.: Casa / 101', run: (v) => createUnit(id, v) })}>
                 <Text style={styles.addUnit}>＋ unidade</Text>
               </Pressable>
             )}
 
-            <Pressable style={styles.addBlock} onPress={() => setPrompt({ title: 'Novo bloco', placeholder: 'Ex.: A', run: (v) => createBlock(id, v) })}>
-              <Text style={styles.addBlockText}>＋ Adicionar bloco</Text>
-            </Pressable>
+            {podeEditar && (
+              <Pressable style={styles.addBlock} onPress={() => setPrompt({ title: 'Novo bloco', placeholder: 'Ex.: A', run: (v) => createBlock(id, v) })}>
+                <Text style={styles.addBlockText}>＋ Adicionar bloco</Text>
+              </Pressable>
+            )}
+
+            {!podeEditar && (
+              <Text style={styles.somenteLeitura}>Só o gestor titular pode alterar blocos e unidades.</Text>
+            )}
           </>
         )}
       </ScrollView>
@@ -151,5 +168,6 @@ const styles = StyleSheet.create({
   del: { fontSize: typography.size.md, color: colors.error },
   addUnit: { color: colors.accent, fontSize: typography.size.sm, fontWeight: typography.weight.medium, marginTop: spacing.xs },
   addBlock: { alignItems: 'center', paddingVertical: spacing.lg, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', marginTop: spacing.sm },
+  somenteLeitura: { fontSize: 13, color: '#8A8F9C', textAlign: 'center', marginTop: 16 },
   addBlockText: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },
 });

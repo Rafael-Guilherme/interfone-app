@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography } from '../../theme';
 import { PrimaryButton, Field, ScreenTitle } from '../../components/ui';
+import { OtpInput } from '../../components/OtpInput';
 import { requestOtp, verifyOtp, Session } from '../../api/client';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
@@ -50,11 +51,15 @@ export function AuthScreen({ route, navigation }: Props) {
     }
   };
 
-  const onVerify = async () => {
+  // `codigo` opcional: quando o OtpInput completa, passa o valor direto — o
+  // state `code` ainda não re-renderizou nesse instante, então não confiamos nele.
+  const onVerify = async (codigo?: string) => {
+    const c = (codigo ?? code).trim();
+    if (c.length !== 6 || busy) return;
     setBusy(true);
     setError(null);
     try {
-      const session = await verifyOtp(email.trim(), code.trim());
+      const session = await verifyOtp(email.trim(), c);
       routeAfterAuth(session);
     } catch (e: any) {
       setError(e.message ?? 'Código inválido');
@@ -94,10 +99,11 @@ export function AuthScreen({ route, navigation }: Props) {
           </>
         ) : (
           <>
-            <Field label="Código de 6 dígitos" value={code} onChangeText={setCode} keyboardType="number-pad" maxLength={6} />
+            <Text style={styles.codeLabel}>Código de 6 dígitos</Text>
+            <OtpInput value={code} onChange={setCode} onComplete={onVerify} />
             {devHint ? <Text style={styles.devHint}>{devHint}</Text> : null}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            <PrimaryButton label={busy ? 'Entrando…' : 'Continuar'} onPress={onVerify} loading={busy} disabled={code.length !== 6} />
+            <PrimaryButton label={busy ? 'Entrando…' : 'Continuar'} onPress={() => onVerify()} loading={busy} disabled={code.length !== 6} />
             <Pressable onPress={() => setStep('email')} style={styles.link}>
               <Text style={styles.linkText}>trocar e-mail</Text>
             </Pressable>
@@ -115,4 +121,5 @@ const styles = StyleSheet.create({
   linkText: { color: colors.textSecondary, fontSize: typography.size.sm },
   error: { color: colors.error, fontSize: typography.size.sm, marginBottom: spacing.md },
   devHint: { color: colors.warning, fontSize: typography.size.sm, marginBottom: spacing.md },
+  codeLabel: { fontSize: typography.size.sm, color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: typography.weight.medium },
 });

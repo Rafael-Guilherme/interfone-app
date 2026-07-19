@@ -33,7 +33,7 @@ export interface BlockRow { id: string; name: string; units: UnitRow[] }
 export interface Structure { has_blocks: boolean; blocks: BlockRow[]; units_no_block: UnitRow[] }
 export interface Announcement { id: string; title: string; body: string; scope: string; block: string | null; reads: number; created_at: string }
 export interface CommonArea { id: string; name: string; enabled: boolean; capacity: number | null; fee_cents: number | null; max_days_ahead: number | null; reservations: number }
-export interface Reservation { id: string; resident: string; unit: string | null; starts_at: string; ends_at: string }
+export interface Reservation { id: string; resident: string; unit: string | null; starts_at: string; ends_at: string; status: 'pending' | 'confirmed'; is_management: boolean }
 export interface QrCodeRow { id: string; label: string | null; token: string; active: boolean; used_count: number; unit: string | null; created_at: string }
 export interface MineItem { profile_status: string; condominium: { id: string; name: string; slug: string; status: string } }
 export interface LookupResult { id: string; name: string; units: { id: string; label: string }[] }
@@ -78,7 +78,7 @@ export const createAnnouncement = (id: string, body: { title: string; body: stri
 export interface AreaInput { name?: string; capacity?: number | null; fee_cents?: number | null; enabled?: boolean; max_days_ahead?: number | null }
 
 /** Calendário de ocupação da área (cores) — ver api/src/common-areas/calendar.ts. */
-export interface DiaArea { day: string; status: 'livre' | 'bloqueado' | 'ocupado' | 'meu' | 'administracao' | 'fora_janela'; reason?: string | null }
+export interface DiaArea { day: string; status: 'livre' | 'bloqueado' | 'ocupado' | 'meu' | 'pendente' | 'administracao' | 'fora_janela'; reason?: string | null }
 export const areaCalendar = (id: string, areaId: string) =>
   api.get<{ days: DiaArea[] }>(`/condominiums/${id}/common-areas/${areaId}/calendar`);
 /** Marca/desmarca um dia como indisponível. */
@@ -87,6 +87,8 @@ export const setAreaBlock = (id: string, areaId: string, day: string, blocked: b
 /** Reserva o dia em nome da administração. */
 export const reserveAsManagement = (id: string, areaId: string, day: string) =>
   api.post(`/condominiums/${id}/common-areas/${areaId}/reservations`, { day });
+export const decideReservation = (id: string, areaId: string, resId: string, action: 'approve' | 'reject') =>
+  api.patch(`/condominiums/${id}/common-areas/${areaId}/reservations/${resId}`, { action });
 export const cancelAreaReservation = (id: string, areaId: string, resId: string) =>
   api.delete(`/condominiums/${id}/common-areas/${areaId}/reservations/${resId}`);
 export const listAreas = (id: string) => api.get<CommonArea[]>(`/condominiums/${id}/common-areas`);

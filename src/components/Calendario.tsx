@@ -13,18 +13,23 @@ import type { DayStatus, DiaCalendario } from '../features/resident/resident.api
  *   verde    — ocupado por você
  *   azul     — ocupado pela administração
  */
+// Cores SÓLIDAS (fundo cheio + texto branco), para cada estado ficar
+// inconfundível no calendário e na legenda. Os tons pastel de antes se
+// confundiam entre si e com "livre".
 const CORES: Record<DayStatus, { bg: string; fg: string }> = {
-  livre: { bg: colors.card, fg: colors.text },
-  bloqueado: { bg: '#E4E6EB', fg: '#8A8F9C' },
-  fora_janela: { bg: '#F1F2F5', fg: '#B9BDC7' },
-  ocupado: { bg: '#FFECEC', fg: '#E5484D' },
-  meu: { bg: '#E6F8EF', fg: '#0F8A52' },
-  administracao: { bg: '#E6EFFC', fg: '#2563C9' },
+  livre: { bg: colors.card, fg: colors.text }, // branco com borda (único selecionável)
+  meu: { bg: '#1FA463', fg: '#FFFFFF' }, // verde — sua reserva
+  pendente: { bg: '#E0930B', fg: '#FFFFFF' }, // âmbar — aguardando aprovação
+  ocupado: { bg: '#E5484D', fg: '#FFFFFF' }, // vermelho — outro morador
+  administracao: { bg: '#2563C9', fg: '#FFFFFF' }, // azul — administração
+  bloqueado: { bg: '#8A8F9C', fg: '#FFFFFF' }, // cinza — indisponível
+  fora_janela: { bg: '#EDEEF1', fg: '#B9BDC7' }, // fora da janela: apagado de propósito
 };
 
 export const LEGENDA: { status: DayStatus; label: string }[] = [
   { status: 'livre', label: 'Livre' },
   { status: 'meu', label: 'Sua reserva' },
+  { status: 'pendente', label: 'Aguardando' },
   { status: 'ocupado', label: 'Outro morador' },
   { status: 'administracao', label: 'Administração' },
   { status: 'bloqueado', label: 'Indisponível' },
@@ -135,6 +140,7 @@ export function Legenda({ itens = LEGENDA }: { itens?: typeof LEGENDA }) {
             style={[
               styles.legendaCor,
               { backgroundColor: CORES[l.status].bg },
+              // Só o "livre" (branco) precisa de contorno para aparecer.
               l.status === 'livre' && { borderWidth: 1, borderColor: colors.border },
             ]}
           />
@@ -167,9 +173,9 @@ const styles = StyleSheet.create({
   dia: { flex: 1, borderRadius: radii.button, alignItems: 'center', justifyContent: 'center' },
   diaLivre: { borderWidth: 1, borderColor: colors.border },
   diaMarcado: { backgroundColor: colors.accent, borderColor: colors.accent },
-  diaTexto: { fontSize: typography.size.sm, fontWeight: typography.weight.medium },
+  diaTexto: { fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
   legenda: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.lg },
   legendaItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  legendaCor: { width: 14, height: 14, borderRadius: 4 },
-  legendaTexto: { fontSize: typography.size.xs, color: colors.textSecondary },
+  legendaCor: { width: 16, height: 16, borderRadius: 4 },
+  legendaTexto: { fontSize: typography.size.xs, color: colors.text },
 });

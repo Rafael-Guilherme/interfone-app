@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { useSession } from '../../stores/session';
-import { getFeed, useResidentCondo } from './resident.api';
+import { getFeed, getCallQueue, useResidentCondo } from './resident.api';
 
 /** Início do morador (②·1) — saudação, unidade, aguardando portaria + atalhos. */
 export function ResidentHomeScreen() {
@@ -13,13 +13,24 @@ export function ResidentHomeScreen() {
   const profiles = useSession((s) => s.profiles);
   const condo = useResidentCondo();
   const [unread, setUnread] = useState(0);
+  // null = ainda carregando; true/false = participa (ou não) da fila de chamadas.
+  const [naFila, setNaFila] = useState<boolean | null>(null);
 
   const profile = profiles.find((p) => p.condominium.id === condo?.condoId && p.role === 'resident');
   const unit = profile?.units[0]?.label;
 
   useFocusEffect(
     useCallback(() => {
-      if (condo) getFeed(condo.condoId).then((f) => setUnread(f.filter((x) => !x.read).length)).catch(() => {});
+      if (!condo) return;
+      getFeed(condo.condoId).then((f) => setUnread(f.filter((x) => !x.read).length)).catch(() => {});
+      // Descobre se EU estou na fila em alguma das minhas unidades. Fora da fila,
+      // a portaria não me toca — a home não pode dizer "pronto para atender".
+      getCallQueue(condo.condoId)
+        .then((qs) => {
+          const eu = qs.flatMap((q) => q.moradores).filter((m) => m.sou_eu);
+          setNaFila(eu.length === 0 ? true : eu.some((m) => m.na_fila));
+        })
+        .catch(() => setNaFila(true));
     }, [condo?.condoId]),
   );
 
@@ -29,11 +40,22 @@ export function ResidentHomeScreen() {
         <Text style={styles.hi}>Olá, {user?.name?.split(' ')[0] ?? 'morador'}</Text>
         {unit ? <Text style={styles.unit}>{condo?.condoName} · {unit}</Text> : <Text style={styles.unit}>{condo?.condoName}</Text>}
 
-        <View style={styles.waitCard}>
-          <View style={styles.dot} />
-          <Text style={styles.waitTitle}>Pronto para atender a portaria</Text>
-          <Text style={styles.waitSub}>Quando a portaria ou um entregador chamar sua unidade, a chamada aparece em tela cheia.</Text>
-        </View>
+        {naFila === false ? (
+          // Fora da fila: a portaria não vai tocar neste aparelho.
+          <Pressable style={styles.waitCard} onPress={() => nav.navigate('FilaChamada')}>
+            <View style={[styles.dot, { backgroundColor: colors.warning }]} />
+            <Text style={styles.waitTitle}>Você não está na fila de chamadas</Text>
+            <Text style={styles.waitSub}>
+              Não vai receber chamadas da portaria nesta unidade. Toque para entrar na fila.
+            </Text>
+          </Pressable>
+        ) : (
+          <View style={styles.waitCard}>
+            <View style={styles.dot} />
+            <Text style={styles.waitTitle}>Pronto para atender a portaria</Text>
+            <Text style={styles.waitSub}>Quando a portaria ou um entregador chamar sua unidade, a chamada aparece em tela cheia.</Text>
+          </View>
+        )}
 
         <View style={styles.grid}>
           <Shortcut emoji="📣" label="Comunicados" badge={unread || undefined} onPress={() => nav.navigate('Comunicados')} />

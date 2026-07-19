@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -12,6 +12,8 @@ import {
   areaCalendar,
   listReservations,
   reserveAsManagement,
+  decideReservation,
+  cancelAreaReservation,
   setAreaBlock,
   useManagerCondo,
 } from './manager.api';
@@ -67,6 +69,9 @@ export function AreaBookingsScreen({ route, navigation }: Props) {
     }
   };
 
+  /** A reserva daquele dia (para agir a partir do calendário). */
+  const reservaDoDia = (day: string) => rows.find((r) => r.starts_at.slice(0, 10) === day);
+
   /** Menu de ações do dia — muda conforme o que já existe nele. */
   const tocarDia = (d: DiaArea) => {
     if (!condo || busy) return;
@@ -83,12 +88,29 @@ export function AreaBookingsScreen({ route, navigation }: Props) {
       return;
     }
 
+    // Pendente: aprovar ou recusar a solicitação do morador.
+    if (d.status === 'pendente') {
+      const r = reservaDoDia(d.day);
+      Alert.alert(`${data} — aguardando aprovação`, r ? `Solicitado por ${r.resident}${r.unit ? ` (${r.unit})` : ''}.` : 'Reserva de morador.', [
+        { text: 'Fechar', style: 'cancel' },
+        { text: 'Recusar', style: 'destructive', onPress: () => r && agir(() => decideReservation(condo.condoId, areaId, r.id, 'reject'), 'Erro ao recusar') },
+        { text: 'Aprovar', onPress: () => r && agir(() => decideReservation(condo.condoId, areaId, r.id, 'approve'), 'Erro ao aprovar') },
+      ]);
+      return;
+    }
+
+    // Ocupado/administração: liberar o dia cancelando a reserva.
     if (d.status === 'ocupado' || d.status === 'administracao' || d.status === 'meu') {
-      Alert.alert(
-        `${data} — reservado`,
-        d.status === 'ocupado' ? 'Reservado por um morador.' : 'Reservado pela administração.',
-        [{ text: 'Fechar', style: 'cancel' }],
-      );
+      const r = reservaDoDia(d.day);
+      const porQuem = d.status === 'administracao' ? 'pela administração' : `por ${r?.resident ?? 'um morador'}`;
+      Alert.alert(`${data} — reservado`, `Reservado ${porQuem}.`, [
+        { text: 'Fechar', style: 'cancel' },
+        {
+          text: 'Liberar o dia',
+          style: 'destructive',
+          onPress: () => r && agir(() => cancelAreaReservation(condo.condoId, areaId, r.id), 'Erro ao liberar'),
+        },
+      ]);
       return;
     }
 
@@ -138,9 +160,43 @@ export function AreaBookingsScreen({ route, navigation }: Props) {
             ) : (
               rows.map((r) => (
                 <View key={r.id} style={styles.card}>
-                  <Text style={styles.date}>{diaDaReserva(r.starts_at)} · dia todo</Text>
+                  <View style={styles.cardHead}>
+                    <Text style={styles.date}>{diaDaReserva(r.starts_at)} · dia todo</Text>
+                    <View style={[styles.tag, r.status === 'confirmed' ? styles.tagOk : styles.tagPend]}>
+                      <Text style={[styles.tagText, r.status === 'confirmed' ? styles.tagTextOk : styles.tagTextPend]}>
+                        {r.status === 'confirmed' ? (r.is_management ? 'Administração' : 'Aprovada') : 'Aguardando'}
+                      </Text>
+                    </View>
+                  </View>
                   <Text style={styles.resident}>{r.resident}</Text>
                   {r.unit ? <Text style={styles.unit}>{r.unit}</Text> : null}
+
+                  {r.status === 'pending' ? (
+                    <View style={styles.acoes}>
+                      <Pressable
+                        style={[styles.acaoBtn, styles.recusar]}
+                        disabled={busy}
+                        onPress={() => condo && agir(() => decideReservation(condo.condoId, areaId, r.id, 'reject'), 'Erro ao recusar')}
+                      >
+                        <Text style={styles.recusarText}>Recusar</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.acaoBtn, styles.aprovar]}
+                        disabled={busy}
+                        onPress={() => condo && agir(() => decideReservation(condo.condoId, areaId, r.id, 'approve'), 'Erro ao aprovar')}
+                      >
+                        <Text style={styles.aprovarText}>Aprovar</Text>
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Pressable
+                      style={styles.liberar}
+                      disabled={busy}
+                      onPress={() => condo && agir(() => cancelAreaReservation(condo.condoId, areaId, r.id), 'Erro ao liberar')}
+                    >
+                      <Text style={styles.liberarText}>Liberar o dia</Text>
+                    </Pressable>
+                  )}
                 </View>
               ))
             )}
@@ -159,7 +215,22 @@ const styles = StyleSheet.create({
   section: { fontSize: typography.size.sm, color: colors.textSecondary, fontWeight: typography.weight.semibold, marginTop: spacing.lg, marginBottom: spacing.md },
   empty: { color: colors.textSecondary, fontSize: typography.size.md, textAlign: 'center', paddingVertical: spacing.lg },
   card: { backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md },
-  date: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text, marginBottom: 2 },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+  date: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
   resident: { fontSize: typography.size.sm, color: colors.text },
   unit: { fontSize: typography.size.xs, color: colors.textSecondary },
+  tag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: radii.pill },
+  tagOk: { backgroundColor: colors.successBg },
+  tagPend: { backgroundColor: colors.warningBg },
+  tagText: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold },
+  tagTextOk: { color: colors.success },
+  tagTextPend: { color: colors.warning },
+  acoes: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  acaoBtn: { flex: 1, paddingVertical: spacing.sm, borderRadius: radii.button, alignItems: 'center' },
+  recusar: { backgroundColor: colors.errorBg, borderWidth: 1, borderColor: '#F3C9CA' },
+  recusarText: { color: colors.error, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  aprovar: { backgroundColor: colors.accent },
+  aprovarText: { color: colors.textOnAccent, fontSize: typography.size.sm, fontWeight: typography.weight.semibold },
+  liberar: { marginTop: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.button, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+  liberarText: { color: colors.error, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
 });

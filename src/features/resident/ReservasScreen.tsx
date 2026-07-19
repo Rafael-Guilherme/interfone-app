@@ -59,6 +59,11 @@ export function ReservasScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.resvArea}>{r.area}</Text>
                   <Text style={styles.resvWhen}>{diaBR(r.starts_at)} · dia todo</Text>
+                  <View style={[styles.badge, r.status === 'confirmed' ? styles.badgeOk : styles.badgePend]}>
+                    <Text style={[styles.badgeText, r.status === 'confirmed' ? styles.badgeTextOk : styles.badgeTextPend]}>
+                      {r.status === 'confirmed' ? '✓ Aprovada' : '⏳ Aguardando aprovação'}
+                    </Text>
+                  </View>
                 </View>
                 <Pressable onPress={() => cancel(r)} hitSlop={8}>
                   <Text style={styles.cancel}>Cancelar</Text>
@@ -108,6 +113,12 @@ const styles = StyleSheet.create({
   resv: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md },
   resvArea: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
   resvWhen: { fontSize: typography.size.sm, color: colors.textSecondary, marginTop: 2 },
+  badge: { alignSelf: 'flex-start', marginTop: 6, paddingVertical: 3, paddingHorizontal: 8, borderRadius: radii.pill },
+  badgeOk: { backgroundColor: colors.successBg },
+  badgePend: { backgroundColor: colors.warningBg },
+  badgeText: { fontSize: typography.size.xs, fontWeight: typography.weight.semibold },
+  badgeTextOk: { color: colors.success },
+  badgeTextPend: { color: colors.warning },
   cancel: { color: colors.error, fontSize: typography.size.sm, fontWeight: typography.weight.medium },
   area: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.card, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, marginBottom: spacing.md },
   areaPressed: { backgroundColor: colors.bg, borderColor: colors.accent },
