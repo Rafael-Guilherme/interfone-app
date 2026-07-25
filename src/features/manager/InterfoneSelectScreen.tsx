@@ -6,6 +6,7 @@ import { colors, spacing, typography, radii } from '../../theme';
 import { api } from '../../api';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
+import { sair } from '../../lib/logout';
 import type { Me } from '../../types';
 
 const isManager = (role: string) => role === 'manager' || role === 'sub_manager';
@@ -15,7 +16,6 @@ const roleLabel = (role: string) => (isManager(role) ? 'Gestor' : 'Morador');
 export function InterfoneSelectScreen() {
   const nav = useNavigation<any>();
   const setMe = useSession((s) => s.setMe);
-  const signOut = useSession((s) => s.signOut);
   const enter = useActive((s) => s.enter);
   const signupIntent = useActive((s) => s.signupIntent);
   const setIntent = useActive((s) => s.setIntent);
@@ -133,7 +133,7 @@ export function InterfoneSelectScreen() {
           </>
         )}
 
-        <Pressable style={styles.signOut} onPress={signOut}>
+        <Pressable style={styles.signOut} onPress={() => void sair()}>
           <Text style={styles.signOutText}>Sair</Text>
         </Pressable>
       </ScrollView>

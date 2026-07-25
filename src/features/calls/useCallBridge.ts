@@ -65,9 +65,10 @@ export function useCallBridge() {
 }
 
 /**
- * Handler de push, chamado pelo listener de FCM/VoIP registrado no bootstrap
- * nativo. Traduz o data-message para a store. Exportado à parte porque o push
- * chega fora do ciclo de render do React (inclusive com app fechado).
+ * Handler de push, chamado pelo listener de notificações (ver
+ * `src/push/usePushCallListener`). Traduz o data-message para a store.
+ * Exportado à parte porque o push chega fora do ciclo de render do React
+ * (inclusive com o app fechado).
  */
 export function handleCallPush(push: IncomingCallPush) {
   const call = useCall.getState();
@@ -79,6 +80,11 @@ export function handleCallPush(push: IncomingCallPush) {
       room: push.room,
     });
   } else if (push.type === "call_cancelled") {
-    call.end();
+    // "Cancelar" é PARAR DE TOCAR, não desligar. O servidor manda este push
+    // para todos os aparelhos do morador quando um deles atende — inclusive
+    // para o que atendeu. Aplicar fora do estado 'incoming' derrubaria a
+    // chamada em curso no próprio aparelho que está falando com o entregador.
+    const { phase, incoming } = useCall.getState();
+    if (phase === "incoming" && incoming?.callId === push.callId) call.end();
   }
 }

@@ -26,6 +26,8 @@ export interface AuthUser {
 }
 export interface Session {
   access: string;
+  /** Token de 7 dias com rotação — é ele que mantém o app aberto já logado. */
+  refresh: string;
   user: AuthUser;
   profiles: Profile[];
 }
@@ -45,6 +47,16 @@ export function requestOtp(email: string) {
   return post<{ sent: boolean; devCode?: string }>('/auth/request-otp', { email });
 }
 
+/** Login/registro com Google: manda o id_token nativo, recebe a mesma sessão do OTP. */
+export function loginWithGoogle(idToken: string) {
+  return post<Session>('/auth/google', { id_token: idToken });
+}
+
 export function verifyOtp(email: string, code: string) {
   return post<Session>('/auth/verify-otp', { email, code });
+}
+
+/** Revoga a sessão deste aparelho no servidor. Os outros aparelhos seguem logados. */
+export function logout(refresh: string) {
+  return post<{ ok: boolean }>('/auth/logout', { refresh });
 }

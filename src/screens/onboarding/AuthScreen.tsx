@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field, ScreenTitle } from '../../components/ui';
 import { OtpInput } from '../../components/OtpInput';
-import { requestOtp, verifyOtp, Session } from '../../api/client';
+import { requestOtp, verifyOtp, loginWithGoogle, Session } from '../../api/client';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
+import { useGoogleSignIn } from '../../lib/googleSignIn';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { BackLink } from './RoleSelectScreen';
 
@@ -76,6 +77,20 @@ export function AuthScreen({ route, navigation }: Props) {
     signIn(session);
   };
 
+  // Google: o hook devolve o id_token; trocamos por uma sessão no backend.
+  const onGoogleToken = async (idToken: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      routeAfterAuth(await loginWithGoogle(idToken));
+    } catch (e: any) {
+      setError(e.message ?? 'Falha ao entrar com o Google.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const google = useGoogleSignIn(onGoogleToken, setError);
+
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.pad} keyboardShouldPersistTaps="handled">
@@ -96,6 +111,27 @@ export function AuthScreen({ route, navigation }: Props) {
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <PrimaryButton label={busy ? 'Enviando…' : 'Enviar código'} onPress={onRequest} loading={busy} disabled={!email.includes('@')} />
+
+            {/* Google só aparece quando os client IDs estão configurados. */}
+            {google.disponivel && (
+              <>
+                <View style={styles.divisor}>
+                  <View style={styles.linha} />
+                  <Text style={styles.ou}>ou</Text>
+                  <View style={styles.linha} />
+                </View>
+                <Pressable
+                  style={({ pressed }) => [styles.googleBtn, pressed && styles.googleBtnOn]}
+                  onPress={() => google.entrar()}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continuar com o Google"
+                >
+                  <Text style={styles.googleG}>G</Text>
+                  <Text style={styles.googleText}>Continuar com o Google</Text>
+                </Pressable>
+              </>
+            )}
           </>
         ) : (
           <>
@@ -122,4 +158,22 @@ const styles = StyleSheet.create({
   error: { color: colors.error, fontSize: typography.size.sm, marginBottom: spacing.md },
   devHint: { color: colors.warning, fontSize: typography.size.sm, marginBottom: spacing.md },
   codeLabel: { fontSize: typography.size.sm, color: colors.textSecondary, marginBottom: spacing.sm, fontWeight: typography.weight.medium },
+  divisor: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginVertical: spacing.lg },
+  linha: { flex: 1, height: 1, backgroundColor: colors.border },
+  ou: { color: colors.textMuted, fontSize: typography.size.sm },
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    height: 52,
+    borderRadius: radii.button,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  googleBtnOn: { backgroundColor: colors.bg },
+  // "G" com as cores do Google numa fonte simples (sem asset externo).
+  googleG: { fontSize: 20, fontWeight: typography.weight.bold, color: '#4285F4' },
+  googleText: { fontSize: typography.size.md, fontWeight: typography.weight.semibold, color: colors.text },
 });

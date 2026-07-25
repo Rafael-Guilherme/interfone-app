@@ -8,12 +8,12 @@ import { api } from '../../api';
 import { mascaraTelefone } from '../../lib/mask';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
+import { sair } from '../../lib/logout';
 import type { Me } from '../../types';
 
 /** Perfil do gestor (③·8-ish) — foto, nome, telefone. */
 export function ManagerProfileScreen() {
   const setMe = useSession((s) => s.setMe);
-  const signOut = useSession((s) => s.signOut);
   const leave = useActive((s) => s.leave);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -73,7 +73,7 @@ export function ManagerProfileScreen() {
         <Pressable style={styles.switch} onPress={() => leave()}>
           <Text style={styles.switchText}>Trocar interfone</Text>
         </Pressable>
-        <LogoutButton onPress={signOut} />
+        <LogoutButton onPress={() => void sair()} />
       </ScrollView>
     </SafeAreaView>
   );

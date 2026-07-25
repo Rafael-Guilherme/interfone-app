@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useSession } from '../../stores/session';
 import { useCall } from '../../stores/call';
 import { API_URL } from '../../api/config';
+import { garantirAccessValido, renovarSessao } from '../../api/refresh';
 
 /**
  * Ponte de chamada do MORADOR. Conecta ao namespace /calls como `resident` com o
@@ -16,33 +17,48 @@ export function useResidentCall() {
 
   useEffect(() => {
     if (!access) return;
+    let cancelado = false;
 
-    // O servidor deriva as unidades do morador do JWT e o coloca nas salas.
-    const socket = io(`${API_URL}/calls`, {
-      transports: ['websocket'],
-      auth: { role: 'resident', token: access },
-    });
-    socketRef.current = socket;
+    void (async () => {
+      // O handshake valida o JWT uma única vez, na conexão: entrar com um token
+      // vencido não daria erro visível, apenas um socket derrubado e chamadas
+      // que nunca chegam. Por isso renovamos antes, se estiver perto de vencer.
+      const token = await garantirAccessValido();
+      if (cancelado || !token) return;
 
-    const call = useCall.getState;
+      // O servidor deriva as unidades do morador do JWT e o coloca nas salas.
+      const socket = io(`${API_URL}/calls`, {
+        transports: ['websocket'],
+        auth: { role: 'resident', token },
+      });
+      socketRef.current = socket;
 
-    socket.on('call:incoming', (p) =>
-      call().receiveIncoming({
-        callId: p.callId,
-        callerName: p.caller,
-        media: p.media,
-        room: p.room,
-      }),
-    );
-    // Terminações remotas (o outro lado desligou, timeout, ou atendida noutro device).
-    socket.on('call:cancelled', () => call().end());
-    socket.on('call:declined', () => call().end());
-    socket.on('call:ended', () => call().end());
-    socket.on('call:missed', () => call().end());
+      const call = useCall.getState;
+
+      socket.on('call:incoming', (p) =>
+        call().receiveIncoming({
+          callId: p.callId,
+          callerName: p.caller,
+          media: p.media,
+          room: p.room,
+        }),
+      );
+      // Terminações remotas (o outro lado desligou, timeout, ou atendida noutro device).
+      socket.on('call:cancelled', () => call().end());
+      socket.on('call:declined', () => call().end());
+      socket.on('call:ended', () => call().end());
+      socket.on('call:missed', () => call().end());
+
+      // Handshake recusado costuma ser token vencido (app parado muito tempo).
+      // Renovar troca o `access` da store, e este efeito roda de novo com o
+      // token novo — daí não reconectarmos aqui na mão.
+      socket.on('connect_error', () => void renovarSessao());
+    })();
 
     return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
+      cancelado = true;
+      socketRef.current?.removeAllListeners();
+      socketRef.current?.disconnect();
       socketRef.current = null;
     };
   }, [access]);
