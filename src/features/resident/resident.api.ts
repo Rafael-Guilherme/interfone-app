@@ -52,6 +52,12 @@ export const getFeed = (id: string) => api.get<FeedItem[]>(`${base(id)}/feed`);
 export const markRead = (id: string, annId: string) => api.post(`${base(id)}/feed/${annId}/read`);
 
 export const getRecados = (id: string) => api.get<Recado[]>(`${base(id)}/recados`);
+/** Abrir a tela de recados zera o sinalizador do início. */
+export const markRecadosRead = (id: string) => api.post(`${base(id)}/recados/read`);
+
+/** Contadores de novidade dos atalhos do início. */
+export interface Badges { comunicados: number; recados: number }
+export const getBadges = (id: string) => api.get<Badges>(`${base(id)}/badges`);
 
 export const getCallHistory = (id: string) => api.get<CallLog[]>(`${base(id)}/calls`);
 

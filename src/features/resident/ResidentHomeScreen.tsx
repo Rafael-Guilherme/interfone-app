@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
 import { useSession } from '../../stores/session';
-import { getFeed, getCallQueue, useResidentCondo } from './resident.api';
+import { getBadges, getCallQueue, useResidentCondo, type Badges } from './resident.api';
 
 /** Início do morador (②·1) — saudação, unidade, aguardando portaria + atalhos. */
 export function ResidentHomeScreen() {
@@ -12,7 +12,7 @@ export function ResidentHomeScreen() {
   const user = useSession((s) => s.user);
   const profiles = useSession((s) => s.profiles);
   const condo = useResidentCondo();
-  const [unread, setUnread] = useState(0);
+  const [badges, setBadges] = useState<Badges>({ comunicados: 0, recados: 0 });
   // null = ainda carregando; true/false = participa (ou não) da fila de chamadas.
   const [naFila, setNaFila] = useState<boolean | null>(null);
 
@@ -22,7 +22,8 @@ export function ResidentHomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!condo) return;
-      getFeed(condo.condoId).then((f) => setUnread(f.filter((x) => !x.read).length)).catch(() => {});
+      // A cada foco: quem volta da tela de recados vê o sinalizador sumir.
+      getBadges(condo.condoId).then(setBadges).catch(() => {});
       // Descobre se EU estou na fila em alguma das minhas unidades. Fora da fila,
       // a portaria não me toca — a home não pode dizer "pronto para atender".
       getCallQueue(condo.condoId)
@@ -58,9 +59,9 @@ export function ResidentHomeScreen() {
         )}
 
         <View style={styles.grid}>
-          <Shortcut emoji="📣" label="Comunicados" badge={unread || undefined} onPress={() => nav.navigate('Comunicados')} />
+          <Shortcut emoji="📣" label="Comunicados" badge={badges.comunicados || undefined} onPress={() => nav.navigate('Comunicados')} />
           <Shortcut emoji="📅" label="Reservas" onPress={() => nav.navigate('Reservas')} />
-          <Shortcut emoji="✉️" label="Recados" onPress={() => nav.navigate('Recados')} />
+          <Shortcut emoji="✉️" label="Recados" badge={badges.recados || undefined} onPress={() => nav.navigate('Recados')} />
           <Shortcut emoji="▦" label="Meus QR" onPress={() => nav.navigate('MeusQr')} />
           <Shortcut emoji="🕘" label="Histórico" onPress={() => nav.navigate('Historico')} />
           <Shortcut emoji="📦" label="Encomendas" onPress={() => nav.navigate('Encomendas')} />

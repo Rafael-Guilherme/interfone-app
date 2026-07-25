@@ -16,6 +16,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { useSession } from '../stores/session';
 import { registerDevice, unregisterDevice } from './push.api';
+import { lerPreferencia } from './preferencia';
 
 /** Canal do Android usado pela chamada: importância máxima, toca e vibra. */
 export const CANAL_CHAMADAS = 'calls';
@@ -74,6 +75,10 @@ export function usePushRegistration() {
     let cancelado = false;
 
     void (async () => {
+      // Respeita quem desligou as notificações no perfil: registrar de novo
+      // aqui faria a escolha se desfazer sozinha a cada abertura do app.
+      if (!(await lerPreferencia())) return;
+
       const token = await obterTokenDePush();
       if (!token || cancelado) return;
       ultimoToken = token;

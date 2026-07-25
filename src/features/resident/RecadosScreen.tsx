@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography, radii } from '../../theme';
-import { Recado, getRecados, useResidentCondo } from './resident.api';
+import { Recado, getRecados, markRecadosRead, useResidentCondo } from './resident.api';
 
 const when = (iso: string) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -16,7 +16,14 @@ export function RecadosScreen() {
 
   const load = useCallback(async () => {
     if (!id) return;
-    try { setItems(await getRecados(id)); } finally { setLoading(false); }
+    try {
+      setItems(await getRecados(id));
+      // Marca depois de carregar: se a lista falhar, o sinalizador continua
+      // aceso — o morador não perdeu o aviso de algo que não chegou a ver.
+      await markRecadosRead(id).catch(() => {});
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 

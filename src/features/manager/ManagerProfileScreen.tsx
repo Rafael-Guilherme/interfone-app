@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Image, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { colors, spacing, typography, radii } from '../../theme';
@@ -9,6 +9,7 @@ import { mascaraTelefone } from '../../lib/mask';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
 import { sair } from '../../lib/logout';
+import { definirPush, lerPreferencia } from '../../push/preferencia';
 import type { Me } from '../../types';
 
 /** Perfil do gestor (③·8-ish) — foto, nome, telefone. */
@@ -21,6 +22,8 @@ export function ManagerProfileScreen() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [notificar, setNotificar] = useState(true);
+  const [mudandoPush, setMudandoPush] = useState(false);
 
   useEffect(() => {
     api.get<any>('/me').then((me) => {
@@ -29,7 +32,28 @@ export function ManagerProfileScreen() {
       setPhone(me.user.phone ?? '');
       setAvatar(me.user.avatar_url ?? null);
     }).finally(() => setLoading(false));
+    void lerPreferencia().then(setNotificar);
   }, []);
+
+  /**
+   * Liga/desliga as notificações DESTE aparelho. Desligar remove o registro no
+   * servidor — com o app fechado não há como filtrar nada do lado de cá.
+   */
+  const alternarNotificacoes = async (ativo: boolean) => {
+    setMudandoPush(true);
+    setNotificar(ativo); // resposta imediata; desfazemos se der errado
+    const r = await definirPush(ativo);
+    if (r !== 'ok') {
+      setNotificar(!ativo);
+      Alert.alert(
+        'Não foi possível ativar',
+        r === 'sem_permissao'
+          ? 'As notificações estão bloqueadas para o Interfone nos ajustes do aparelho. Libere por lá para receber chamadas com o app fechado.'
+          : 'Tente novamente em instantes.',
+      );
+    }
+    setMudandoPush(false);
+  };
 
   const pick = async () => {
     const p = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -70,6 +94,23 @@ export function ManagerProfileScreen() {
         <View style={{ height: spacing.md }} />
         <PrimaryButton label={busy ? 'Salvando…' : 'Salvar'} onPress={save} loading={busy} />
 
+        <View style={styles.pushRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.pushTitle}>Notificações</Text>
+            <Text style={styles.pushHint}>
+              {notificar
+                ? 'Você recebe as chamadas da portaria mesmo com o app fechado.'
+                : 'Desligado: as chamadas só aparecem com o app aberto.'}
+            </Text>
+          </View>
+          <Switch
+            value={notificar}
+            onValueChange={alternarNotificacoes}
+            disabled={mudandoPush}
+            trackColor={{ true: colors.accent }}
+          />
+        </View>
+
         <Pressable style={styles.switch} onPress={() => leave()}>
           <Text style={styles.switchText}>Trocar interfone</Text>
         </Pressable>
@@ -88,6 +129,17 @@ const styles = StyleSheet.create({
   avatarEmpty: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   avatarLetter: { fontSize: 40, fontWeight: typography.weight.bold, color: colors.text },
   changePhoto: { color: colors.accent, fontSize: typography.size.sm, marginTop: spacing.sm, fontWeight: typography.weight.medium },
+  pushRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  pushTitle: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },
+  pushHint: { color: colors.textSecondary, fontSize: typography.size.sm, marginTop: 2 },
   switch: { alignItems: 'center', paddingVertical: spacing.lg, marginTop: spacing.md },
   switchText: { color: colors.text, fontSize: typography.size.md, fontWeight: typography.weight.medium },
   signOut: { alignItems: 'center', paddingVertical: spacing.md },
