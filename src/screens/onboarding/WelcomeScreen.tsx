@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
@@ -19,9 +19,7 @@ export function WelcomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.hero}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>i</Text>
-        </View>
+        <Image source={require('../../../assets/icon.png')} style={styles.logo} accessibilityLabel="Interfone" />
         <Text style={styles.brand}>Interfone</Text>
         <Text style={styles.tagline}>A portaria do seu condomínio, agora no seu celular.</Text>
 
@@ -54,12 +52,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: radii.card,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    // O PNG é "full-bleed" (vermelho até a borda); overflow garante o corte
+    // arredondado no Android, que não recorta a imagem só com borderRadius.
+    overflow: 'hidden',
     marginBottom: spacing.lg,
   },
-  logoText: { color: colors.textOnAccent, fontSize: 38, fontWeight: typography.weight.bold, marginTop: -2 },
   brand: { fontSize: 40, fontWeight: typography.weight.bold, color: colors.text, marginBottom: spacing.sm, letterSpacing: -0.5 },
   tagline: { fontSize: typography.size.lg, color: colors.textSecondary, lineHeight: 26, marginBottom: spacing.xxl },
   destaques: { gap: spacing.lg },

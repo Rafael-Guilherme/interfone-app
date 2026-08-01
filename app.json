@@ -5,11 +5,10 @@
     "version": "0.1.0",
     "scheme": "interfone",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "splash": {
-      "backgroundColor": "#F7F8FB"
-    },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.interfone.mobile",
@@ -22,6 +21,10 @@
     "android": {
       "package": "app.interfone.mobile",
       "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FF0000"
+      },
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.VIBRATE",
@@ -39,7 +42,8 @@
       ]
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "extra": {
       "//": "Em device/APK, defina EXPO_PUBLIC_API_URL com o IP/host da API (localhost não sai do aparelho).",
@@ -49,6 +53,15 @@
     },
     "plugins": [
       "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FF0000",
+          "image": "./assets/splash.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
       "expo-notifications",
       "@livekit/react-native-expo-plugin",
       "@config-plugins/react-native-webrtc",
