@@ -8,11 +8,9 @@ import { PrimaryButton, BackButton } from '../../components/ui';
 import { QrImage } from './QrImage';
 import type { ManagerStackParamList } from '../../navigation/types';
 import { CondoDetail, getCondo, useManagerCondo } from './manager.api';
+import { qrLink as linkFor } from '../../api/config';
 
 type Props = NativeStackScreenProps<ManagerStackParamList, 'ShareAccess'>;
-
-// Base da web do entregador (o entregador abre esse link, que lê ?t=<token>).
-const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173').replace(/\/$/, '');
 
 /** Compartilhar acesso (③·8) — QR/link da portaria + código do condomínio. */
 export function ShareAccessScreen({ navigation }: Props) {
@@ -34,7 +32,7 @@ export function ShareAccessScreen({ navigation }: Props) {
       .finally(() => setLoading(false));
   }, [condo?.condoId]);
 
-  const qrLink = detail?.qr_token ? `${WEB_URL}/?t=${detail.qr_token}` : null;
+  const qrLink = detail?.qr_token ? linkFor(detail.qr_token) : null;
 
   const shareLink = async () => {
     if (!qrLink) return;

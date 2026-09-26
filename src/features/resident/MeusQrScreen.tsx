@@ -6,9 +6,7 @@ import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field, BackButton } from '../../components/ui';
 import { QrImage } from '../manager/QrImage';
 import { MyQr, getMyQrs, createMyQr, deleteMyQr, useResidentCondo } from './resident.api';
-
-const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173').replace(/\/$/, '');
-const linkFor = (t: string) => `${WEB_URL}/?t=${t}`;
+import { qrLink as linkFor } from '../../api/config';
 
 /** Meus QR codes (②·9) — QRs de visita gerados pelo morador. */
 export function MeusQrScreen() {

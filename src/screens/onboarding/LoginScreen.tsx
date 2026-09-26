@@ -59,6 +59,7 @@ export function LoginScreen({ navigation }: Props) {
         loading={requestOtp.isPending}
       />
 
+      {/* Login/cadastro com Google desativado por enquanto.
       <View style={styles.divider}>
         <Text style={styles.dividerText}>ou</Text>
       </View>
@@ -66,11 +67,12 @@ export function LoginScreen({ navigation }: Props) {
       <Pressable
         style={styles.google}
         onPress={() => {
-          /* Google sign-in */
+          // Google sign-in
         }}
       >
         <Text style={styles.googleText}>Continuar com Google</Text>
       </Pressable>
+      */}
     </View>
   );
 }

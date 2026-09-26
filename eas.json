@@ -7,19 +7,26 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api-interfone.creativeo.com.br",
+        "EXPO_PUBLIC_WEB_URL": "https://web-interfone.creativeo.com.br",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "141680530020-jvmhpkrl0jq56d9c1ehm1cq2h0ekam9k.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID": "141680530020-h00daa283o906lc7itcd3tlgstv48kkm.apps.googleusercontent.com"
       }
     },
     "production": {
-      "android": { "buildType": "app-bundle" }
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {

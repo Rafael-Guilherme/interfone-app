@@ -5,10 +5,11 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, radii } from '../../theme';
 import { PrimaryButton, Field, ScreenTitle } from '../../components/ui';
 import { OtpInput } from '../../components/OtpInput';
-import { requestOtp, verifyOtp, loginWithGoogle, Session } from '../../api/client';
+import { requestOtp, verifyOtp, /* loginWithGoogle, */ Session } from '../../api/client';
 import { useSession } from '../../stores/session';
 import { useActive } from '../../stores/active';
-import { useGoogleSignIn } from '../../lib/googleSignIn';
+// Login/cadastro com Google desativado por enquanto.
+// import { useGoogleSignIn } from '../../lib/googleSignIn';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { BackLink } from './RoleSelectScreen';
 
@@ -77,19 +78,20 @@ export function AuthScreen({ route, navigation }: Props) {
     signIn(session);
   };
 
+  // Login/cadastro com Google desativado por enquanto.
   // Google: o hook devolve o id_token; trocamos por uma sessão no backend.
-  const onGoogleToken = async (idToken: string) => {
-    setBusy(true);
-    setError(null);
-    try {
-      routeAfterAuth(await loginWithGoogle(idToken));
-    } catch (e: any) {
-      setError(e.message ?? 'Falha ao entrar com o Google.');
-    } finally {
-      setBusy(false);
-    }
-  };
-  const google = useGoogleSignIn(onGoogleToken, setError);
+  // const onGoogleToken = async (idToken: string) => {
+  //   setBusy(true);
+  //   setError(null);
+  //   try {
+  //     routeAfterAuth(await loginWithGoogle(idToken));
+  //   } catch (e: any) {
+  //     setError(e.message ?? 'Falha ao entrar com o Google.');
+  //   } finally {
+  //     setBusy(false);
+  //   }
+  // };
+  // const google = useGoogleSignIn(onGoogleToken, setError);
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -112,7 +114,7 @@ export function AuthScreen({ route, navigation }: Props) {
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <PrimaryButton label={busy ? 'Enviando…' : 'Enviar código'} onPress={onRequest} loading={busy} disabled={!email.includes('@')} />
 
-            {/* Google só aparece quando os client IDs estão configurados. */}
+            {/* Login/cadastro com Google desativado por enquanto.
             {google.disponivel && (
               <>
                 <View style={styles.divisor}>
@@ -132,6 +134,7 @@ export function AuthScreen({ route, navigation }: Props) {
                 </Pressable>
               </>
             )}
+            */}
           </>
         ) : (
           <>

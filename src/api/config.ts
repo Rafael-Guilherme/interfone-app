@@ -34,3 +34,33 @@ function resolveApiUrl(): string {
 }
 
 export const API_URL = resolveApiUrl();
+
+/**
+ * URL base do front web (entregador). É o destino dos links/QR compartilhados,
+ * então nunca pode ser `localhost` num aparelho real.
+ *   1. EXPO_PUBLIC_WEB_URL (override explícito — obrigatório no build de produção).
+ *   2. host do servidor Metro + porta do Vite (dev na LAN).
+ *   3. Fallback localhost (iOS simulator / web).
+ */
+const WEB_PORT = 5173;
+
+function resolveWebUrl(): string {
+  const explicit = process.env.EXPO_PUBLIC_WEB_URL;
+  if (explicit) return explicit.replace(/\/$/, '');
+
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants as any).expoGoConfig?.debuggerHost ??
+    (Constants as any).manifest2?.extra?.expoClient?.hostUri ??
+    '';
+  const host = String(hostUri).split(':')[0];
+  if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    return `http://${host}:${WEB_PORT}`;
+  }
+  return `http://localhost:${WEB_PORT}`;
+}
+
+export const WEB_URL = resolveWebUrl();
+
+/** Link público do QR (o web aceita `/?t=<token>`). */
+export const qrLink = (token: string) => `${WEB_URL}/?t=${token}`;

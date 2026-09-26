@@ -9,4 +9,4 @@ ios
 
 # Credencial do projeto Firebase (push no Android) — ver docs/PUSH.md
 GoogleService-Info.plist
-google-services.json
+#google-services.json

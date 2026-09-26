@@ -9,11 +9,9 @@ import { PromptModal } from './PromptModal';
 import { QrImage } from './QrImage';
 import { QrCodeRow, listQrs, createQr, updateQr, deleteQr, useManagerCondo } from './manager.api';
 import type { ManagerStackParamList } from '../../navigation/types';
+import { qrLink as linkFor } from '../../api/config';
 
 type Props = NativeStackScreenProps<ManagerStackParamList, 'QRCodes'>;
-
-const WEB_URL = (process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:5173').replace(/\/$/, '');
-const linkFor = (token: string) => `${WEB_URL}/?t=${token}`;
 
 /** QR codes do gestor (③·7) — criar, ativar/desativar, compartilhar, remover. */
 export function QRCodesScreen({ navigation }: Props) {
